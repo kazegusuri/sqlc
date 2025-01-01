@@ -6,5 +6,6 @@ import (
 	nodes "github.com/pganalyze/pg_query_go/v5"
 )
 
+var ParseScan = nodes.Scan
 var Parse = nodes.Parse
 var Fingerprint = nodes.Fingerprint

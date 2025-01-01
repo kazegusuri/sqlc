@@ -2,6 +2,9 @@ package ast
 
 type String struct {
 	Str string
+
+	// Comments associated with this string.
+	AssociatedComments []*SQLCommentGroup
 }
 
 func (n *String) Pos() int {

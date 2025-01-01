@@ -19,6 +19,8 @@ type IndexStmt struct {
 	Transformed    bool
 	Concurrent     bool
 	IfNotExists    bool
+
+	AssociatedComments []*SQLCommentGroup
 }
 
 func (n *IndexStmt) Pos() int {

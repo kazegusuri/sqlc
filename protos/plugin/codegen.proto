@@ -3,7 +3,7 @@ syntax = "proto3";
 package plugin;
 
 service CodegenService {
-  rpc Generate (GenerateRequest) returns (GenerateResponse);
+  rpc Generate(GenerateRequest) returns (GenerateResponse);
 }
 
 message File {
@@ -67,12 +67,50 @@ message Enum {
   string name = 1;
   repeated string vals = 2;
   string comment = 3;
+  repeated EnumValue values = 4;
+  repeated CommentGroup associated_comments = 5;
+}
+
+message EnumValue {
+  string value = 1;
+  repeated CommentGroup associated_comments = 2;
 }
 
 message Table {
   Identifier rel = 1;
   repeated Column columns = 2;
   string comment = 3;
+  repeated Index indexes = 4;
+  repeated CommentGroup associated_comments = 5;
+}
+
+message Index {
+  string name = 1;
+  repeated IndexElem elems = 2;
+  bool is_unique = 3;
+  bool is_primary = 4;
+  repeated CommentGroup associated_comments = 5;
+}
+
+message IndexElem {
+  string name = 1;
+  SortByDir ordering = 2;
+  SortByNulls nulls_ordering = 3;
+}
+
+enum SortByDir {
+  SORT_BY_DIR_UNDEFINED = 0;
+  SORT_BY_DIR_DEFAULT = 1;
+  SORT_BY_DIR_ASC = 2;
+  SORT_BY_DIR_DESC = 3;
+  SORT_BY_DIR_USING = 4;
+}
+
+enum SortByNulls {
+  SORT_BY_NULLS_UNDEFINED = 0;
+  SORT_BY_NULLS_DEFAULT = 1;
+  SORT_BY_NULLS_FIRST = 2;
+  SORT_BY_NULLS_LAST = 3;
 }
 
 message Identifier {
@@ -100,6 +138,19 @@ message Column {
   string original_name = 15;
   bool unsigned = 16;
   int32 array_dims = 17;
+
+  repeated CommentGroup associated_comments = 18;
+}
+
+enum CommentType {
+  COMMENT_TYPE_UNDEFINED = 0;
+  COMMENT_TYPE_LEADING = 1;
+  COMMENT_TYPE_TRAILING = 2;
+}
+
+message CommentGroup {
+  repeated string comments = 1;
+  CommentType comment_type = 2;
 }
 
 message Query {

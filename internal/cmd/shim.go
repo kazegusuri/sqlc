@@ -67,10 +67,20 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 		for _, typ := range s.Types {
 			switch typ := typ.(type) {
 			case *catalog.Enum:
+				vals := make([]*plugin.EnumValue, len(typ.Vals))
+				for i := range typ.Vals {
+					vals[i] = &plugin.EnumValue{
+						Value:              typ.EnumVals[i].Val,
+						AssociatedComments: pluginCommentGroup(typ.EnumVals[i].AssociatedComments),
+					}
+				}
+
 				enums = append(enums, &plugin.Enum{
-					Name:    typ.Name,
-					Comment: typ.Comment,
-					Vals:    typ.Vals,
+					Name:               typ.Name,
+					Comment:            typ.Comment,
+					Vals:               typ.Vals,
+					Values:             vals,
+					AssociatedComments: pluginCommentGroup(typ.AssociatedComments),
 				})
 			case *catalog.CompositeType:
 				cts = append(cts, &plugin.CompositeType{
@@ -105,6 +115,26 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 						Schema:  t.Rel.Schema,
 						Name:    t.Rel.Name,
 					},
+					AssociatedComments: pluginCommentGroup(c.AssociatedComments),
+				})
+			}
+			var indexes []*plugin.Index
+			for _, idx := range t.Indexes {
+				var elems []*plugin.IndexElem
+				for _, elem := range idx.Elems {
+					elems = append(elems, &plugin.IndexElem{
+						Name:          elem.Name,
+						Ordering:      plugin.SortByDir(elem.Ordering),
+						NullsOrdering: plugin.SortByNulls(elem.NullsOrdering),
+					})
+				}
+
+				indexes = append(indexes, &plugin.Index{
+					Name:               idx.Name,
+					Elems:              elems,
+					IsUnique:           idx.IsUnique,
+					IsPrimary:          idx.IsPrimary,
+					AssociatedComments: pluginCommentGroup(idx.AssociatedComments),
 				})
 			}
 			tables = append(tables, &plugin.Table{
@@ -113,8 +143,10 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 					Schema:  t.Rel.Schema,
 					Name:    t.Rel.Name,
 				},
-				Columns: columns,
-				Comment: t.Comment,
+				Columns:            columns,
+				Comment:            t.Comment,
+				Indexes:            indexes,
+				AssociatedComments: pluginCommentGroup(t.AssociatedComments),
 			})
 		}
 		schemas = append(schemas, &plugin.Schema{
@@ -131,6 +163,24 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 		Comment:       c.Comment,
 		Schemas:       schemas,
 	}
+}
+
+func pluginCommentGroup(comments []*catalog.CommentGroup) []*plugin.CommentGroup {
+	var out []*plugin.CommentGroup
+	for _, cg := range comments {
+		var typ plugin.CommentType
+		switch cg.Type {
+		case catalog.LeadingComment:
+			typ = plugin.CommentType_COMMENT_TYPE_LEADING
+		case catalog.TrailingComment:
+			typ = plugin.CommentType_COMMENT_TYPE_TRAILING
+		}
+		out = append(out, &plugin.CommentGroup{
+			Comments:    cg.Comments,
+			CommentType: typ,
+		})
+	}
+	return out
 }
 
 func pluginQueries(r *compiler.Result) []*plugin.Query {

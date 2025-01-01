@@ -137,6 +137,9 @@ func (c *Catalog) Update(stmt ast.Statement, colGen columnGenerator) error {
 			}
 		}
 
+	case *ast.IndexStmt:
+		err = c.createIndex(n)
+
 	}
 	return err
 }

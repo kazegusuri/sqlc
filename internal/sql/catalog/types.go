@@ -15,9 +15,16 @@ type Type interface {
 }
 
 type Enum struct {
-	Name    string
-	Vals    []string
-	Comment string
+	Name               string
+	Vals               []string
+	EnumVals           []*EnumValue
+	Comment            string
+	AssociatedComments []*CommentGroup
+}
+
+type EnumValue struct {
+	Val                string
+	AssociatedComments []*CommentGroup
 }
 
 func (e *Enum) SetComment(c string) {
@@ -84,11 +91,28 @@ func (c *Catalog) createEnum(stmt *ast.CreateEnumStmt) error {
 	if _, _, err := schema.getType(stmt.TypeName); err == nil {
 		return sqlerr.TypeExists(tbl.Name)
 	}
+
 	schema.Types = append(schema.Types, &Enum{
-		Name: stmt.TypeName.Name,
-		Vals: stringSlice(stmt.Vals),
+		Name:               stmt.TypeName.Name,
+		Vals:               stringSlice(stmt.Vals),
+		EnumVals:           createEnumValue(stmt.Vals),
+		AssociatedComments: convertAssociatedComments(stmt.AssociatedComments),
 	})
 	return nil
+}
+
+func createEnumValue(list *ast.List) []*EnumValue {
+	vals, comments := stringSliceWithAssociatedComments(list)
+
+	enumVals := make([]*EnumValue, len(vals))
+	for i := range vals {
+		enumVals[i] = &EnumValue{
+			Val:                vals[i],
+			AssociatedComments: comments[i],
+		}
+	}
+
+	return enumVals
 }
 
 func stringSlice(list *ast.List) []string {
@@ -99,6 +123,18 @@ func stringSlice(list *ast.List) []string {
 		}
 	}
 	return items
+}
+
+func stringSliceWithAssociatedComments(list *ast.List) ([]string, [][]*CommentGroup) {
+	items := []string{}
+	comments := [][]*CommentGroup{}
+	for _, item := range list.Items {
+		if n, ok := item.(*ast.String); ok {
+			items = append(items, n.Str)
+			comments = append(comments, convertAssociatedComments(n.AssociatedComments))
+		}
+	}
+	return items, comments
 }
 
 func (c *Catalog) getType(rel *ast.TypeName) (Type, int, error) {
@@ -176,6 +212,7 @@ func (c *Catalog) alterTypeRenameValue(stmt *ast.AlterTypeRenameValueStmt) error
 		return fmt.Errorf("type %T already has value %s", stmt.Type, *stmt.NewValue)
 	}
 	enum.Vals[oldIndex] = *stmt.NewValue
+	enum.EnumVals[oldIndex] = &EnumValue{Val: *stmt.NewValue}
 	return nil
 }
 
@@ -234,9 +271,12 @@ func (c *Catalog) alterTypeAddValue(stmt *ast.AlterTypeAddValueStmt) error {
 
 	if insertIndex == len(enum.Vals) {
 		enum.Vals = append(enum.Vals, *stmt.NewValue)
+		enum.EnumVals = append(enum.EnumVals, &EnumValue{Val: *stmt.NewValue})
 	} else {
 		enum.Vals = append(enum.Vals[:insertIndex+1], enum.Vals[insertIndex:]...)
 		enum.Vals[insertIndex] = *stmt.NewValue
+		enum.EnumVals = append(enum.EnumVals[:insertIndex+1], enum.EnumVals[insertIndex:]...)
+		enum.EnumVals[insertIndex] = &EnumValue{Val: *stmt.NewValue}
 	}
 
 	return nil
@@ -349,9 +389,10 @@ func (c *Catalog) renameType(stmt *ast.RenameTypeStmt) error {
 
 	case *Enum:
 		schema.Types[idx] = &Enum{
-			Name:    newName,
-			Vals:    typ.Vals,
-			Comment: typ.Comment,
+			Name:     newName,
+			Vals:     typ.Vals,
+			EnumVals: typ.EnumVals,
+			Comment:  typ.Comment,
 		}
 
 	default:

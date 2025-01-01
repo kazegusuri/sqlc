@@ -151,6 +151,12 @@ func (p *Parser) Parse(r io.Reader) ([]ast.Statement, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	dispatcher, err := parseComments(string(contents))
+	if err != nil {
+		return nil, err
+	}
+
 	tree, err := Parse(string(contents))
 	if err != nil {
 		pErr := normalizeErr(err)
@@ -159,7 +165,7 @@ func (p *Parser) Parse(r io.Reader) ([]ast.Statement, error) {
 
 	var stmts []ast.Statement
 	for _, raw := range tree.Stmts {
-		n, err := translate(raw.Stmt)
+		n, err := translate(raw, dispatcher)
 		if err == errSkip {
 			continue
 		}
@@ -176,6 +182,9 @@ func (p *Parser) Parse(r io.Reader) ([]ast.Statement, error) {
 				StmtLen:      int(raw.StmtLen),
 			},
 		})
+
+		// discard comments not read in the statement
+		_ = dispatcher.AssociatedCommentGroups(raw.StmtLocation + raw.StmtLen)
 	}
 	return stmts, nil
 }
@@ -203,7 +212,8 @@ func (p *Parser) CommentSyntax() source.CommentSyntax {
 	}
 }
 
-func translate(node *nodes.Node) (ast.Node, error) {
+func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, error) {
+	node := raw.Stmt
 	switch inner := node.Node.(type) {
 
 	case *nodes.Node_AlterEnumStmt:
@@ -398,10 +408,13 @@ func translate(node *nodes.Node) (ast.Node, error) {
 
 	case *nodes.Node_CreateStmt:
 		n := inner.CreateStmt
+
 		rel := parseRelationFromRangeVar(n.Relation)
+		comments := dispatcher.AssociatedCommentGroups(n.Relation.Location)
 		create := &ast.CreateTableStmt{
-			Name:        rel.TableName(),
-			IfNotExists: n.IfNotExists,
+			Name:               rel.TableName(),
+			IfNotExists:        n.IfNotExists,
+			AssociatedComments: comments,
 		}
 		for _, node := range n.InhRelations {
 			switch item := node.Node.(type) {
@@ -412,14 +425,16 @@ func translate(node *nodes.Node) (ast.Node, error) {
 				}
 			}
 		}
-		primaryKey := make(map[string]bool)
+
+		primaryKeyNames := make(map[string]struct{})
+		// decide primary keys in this table first before iterating column definitions
 		for _, elt := range n.TableElts {
 			switch item := elt.Node.(type) {
 			case *nodes.Node_Constraint:
 				if item.Constraint.Contype == nodes.ConstrType_CONSTR_PRIMARY {
 					for _, key := range item.Constraint.Keys {
 						// FIXME: Possible nil pointer dereference
-						primaryKey[key.Node.(*nodes.Node_String_).String_.Sval] = true
+						primaryKeyNames[key.Node.(*nodes.Node_String_).String_.Sval] = struct{}{}
 					}
 				}
 
@@ -428,34 +443,75 @@ func translate(node *nodes.Node) (ast.Node, error) {
 				create.ReferTable = rel.TableName()
 			}
 		}
+
+		var constraints []*ast.CreateTableConstraint
 		for _, elt := range n.TableElts {
 			switch item := elt.Node.(type) {
+			case *nodes.Node_Constraint:
+				var keys []string
+				for _, key := range item.Constraint.Keys {
+					// FIXME: Possible nil pointer dereference
+					keys = append(keys, key.Node.(*nodes.Node_String_).String_.Sval)
+				}
+
+				comments := dispatcher.AssociatedCommentGroups(item.Constraint.Location)
+
+				constraint := &ast.CreateTableConstraint{
+					Keys:               keys,
+					AssociatedComments: comments,
+				}
+
+				switch item.Constraint.Contype {
+				case nodes.ConstrType_CONSTR_PRIMARY:
+					constraint.Primary = true
+				case nodes.ConstrType_CONSTR_UNIQUE:
+					constraint.Unique = true
+				}
+				constraints = append(constraints, constraint)
+
 			case *nodes.Node_ColumnDef:
 				rel, err := parseRelationFromNodes(item.ColumnDef.TypeName.Names)
 				if err != nil {
 					return nil, err
 				}
 
-				primary := false
 				for _, con := range item.ColumnDef.Constraints {
-					if constraint, ok := con.Node.(*nodes.Node_Constraint); ok {
-						primary = constraint.Constraint.Contype == nodes.ConstrType_CONSTR_PRIMARY
+					if nodeConstraint, ok := con.Node.(*nodes.Node_Constraint); ok {
+						constraint := &ast.CreateTableConstraint{
+							Keys: []string{item.ColumnDef.Colname},
+						}
+
+						switch nodeConstraint.Constraint.Contype {
+						case nodes.ConstrType_CONSTR_PRIMARY:
+							constraint.Primary = true
+						case nodes.ConstrType_CONSTR_UNIQUE:
+							constraint.Unique = true
+						}
+						constraints = append(constraints, constraint)
 					}
 				}
 
+				_, isPrimary := primaryKeyNames[item.ColumnDef.Colname]
+				comments := dispatcher.AssociatedCommentGroups(item.ColumnDef.Location)
+
 				create.Cols = append(create.Cols, &ast.ColumnDef{
-					Colname:    item.ColumnDef.Colname,
-					TypeName:   rel.TypeName(),
-					IsNotNull:  isNotNull(item.ColumnDef) || primaryKey[item.ColumnDef.Colname],
-					IsArray:    isArray(item.ColumnDef.TypeName),
-					ArrayDims:  len(item.ColumnDef.TypeName.ArrayBounds),
-					PrimaryKey: primary,
+					Colname:            item.ColumnDef.Colname,
+					TypeName:           rel.TypeName(),
+					IsNotNull:          isNotNull(item.ColumnDef) || isPrimary,
+					IsArray:            isArray(item.ColumnDef.TypeName),
+					ArrayDims:          len(item.ColumnDef.TypeName.ArrayBounds),
+					PrimaryKey:         isPrimary,
+					AssociatedComments: comments,
 				})
 			}
 		}
+
+		create.Constraints = constraints
+
 		return create, nil
 
 	case *nodes.Node_CreateEnumStmt:
+
 		n := inner.CreateEnumStmt
 		rel, err := parseRelationFromNodes(n.TypeName)
 		if err != nil {
@@ -465,12 +521,25 @@ func translate(node *nodes.Node) (ast.Node, error) {
 			TypeName: rel.TypeName(),
 			Vals:     &ast.List{},
 		}
+
+		// search location by string and associate comments near it
+		if loc := dispatcher.FindLocationInStatement(raw, "CREATE TYPE"); loc >= 0 {
+			stmt.AssociatedComments = dispatcher.AssociatedCommentGroups(loc)
+		}
+
 		for _, val := range n.Vals {
 			switch v := val.Node.(type) {
 			case *nodes.Node_String_:
-				stmt.Vals.Items = append(stmt.Vals.Items, &ast.String{
-					Str: v.String_.Sval,
-				})
+				val := v.String_.Sval
+				str := &ast.String{
+					Str: val,
+				}
+				stmt.Vals.Items = append(stmt.Vals.Items, str)
+
+				// search location by string and associate comments near it
+				if loc := dispatcher.FindLocationInStatement(raw, fmt.Sprintf("'%s'", val)); loc >= 0 {
+					str.AssociatedComments = dispatcher.AssociatedCommentGroups(loc)
+				}
 			}
 		}
 		return stmt, nil
@@ -637,6 +706,12 @@ func translate(node *nodes.Node) (ast.Node, error) {
 
 		}
 		return nil, errSkip
+
+	case *nodes.Node_IndexStmt:
+		indexStmt := convertIndexStmt(inner.IndexStmt)
+		comments := dispatcher.AssociatedCommentGroups(inner.IndexStmt.Relation.Location)
+		indexStmt.AssociatedComments = comments
+		return indexStmt, nil
 
 	default:
 		return convert(node)

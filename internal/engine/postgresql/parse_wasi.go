@@ -7,4 +7,5 @@ import (
 )
 
 var Parse = nodes.Parse
+var ParseScan = nodes.Scan
 var Fingerprint = nodes.Fingerprint
