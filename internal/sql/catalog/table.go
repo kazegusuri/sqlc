@@ -13,11 +13,11 @@ import (
 // A database table is a collection of related data held in a table format within a database.
 // It consists of columns and rows.
 type Table struct {
-	Rel                *ast.TableName
-	Columns            []*Column
-	Indexes            []*Index
-	Comment            string
-	AssociatedComments []*CommentGroup
+	Rel              *ast.TableName
+	Columns          []*Column
+	Indexes          []*Index
+	Comment          string
+	AttachedComments []*CommentGroup
 }
 
 func checkMissing(err error, missingOK bool) error {
@@ -122,15 +122,15 @@ func (table *Table) setNotNull(cmd *ast.AlterTableCmd) error {
 //
 // TODO: Should this just be ast Nodes?
 type Column struct {
-	Name               string
-	Type               ast.TypeName
-	IsNotNull          bool
-	IsUnsigned         bool
-	IsArray            bool
-	ArrayDims          int
-	Comment            string
-	Length             *int
-	AssociatedComments []*CommentGroup
+	Name             string
+	Type             ast.TypeName
+	IsNotNull        bool
+	IsUnsigned       bool
+	IsArray          bool
+	ArrayDims        int
+	Comment          string
+	Length           *int
+	AttachedComments []*CommentGroup
 
 	linkedType bool
 }
@@ -267,9 +267,9 @@ func (c *Catalog) createTable(stmt *ast.CreateTableStmt) error {
 	}
 
 	tbl := Table{
-		Rel:                stmt.Name,
-		Comment:            stmt.Comment,
-		AssociatedComments: convertAssociatedComments(stmt.AssociatedComments),
+		Rel:              stmt.Name,
+		Comment:          stmt.Comment,
+		AttachedComments: convertAttachedComments(stmt.AttachedComments),
 	}
 	coltype := make(map[string]ast.TypeName) // used to check for duplicate column names
 	seen := make(map[string]bool)            // used to check for duplicate column names
@@ -346,11 +346,11 @@ func (c *Catalog) createTable(stmt *ast.CreateTableStmt) error {
 			})
 		}
 		tbl.Indexes = append(tbl.Indexes, &Index{
-			Name:               "", // cannot define index name by table constraints
-			Elems:              elems,
-			IsUnique:           constraint.Unique,
-			IsPrimary:          constraint.Primary,
-			AssociatedComments: convertAssociatedComments(constraint.AssociatedComments),
+			Name:             "", // cannot define index name by table constraints
+			Elems:            elems,
+			IsUnique:         constraint.Unique,
+			IsPrimary:        constraint.Primary,
+			AttachedComments: convertAttachedComments(constraint.AttachedComments),
 		})
 	}
 
@@ -360,15 +360,15 @@ func (c *Catalog) createTable(stmt *ast.CreateTableStmt) error {
 
 func (c *Catalog) defineColumn(table *ast.TableName, col *ast.ColumnDef) (*Column, error) {
 	tc := &Column{
-		Name:               col.Colname,
-		Type:               *col.TypeName,
-		IsNotNull:          col.IsNotNull,
-		IsUnsigned:         col.IsUnsigned,
-		IsArray:            col.IsArray,
-		ArrayDims:          col.ArrayDims,
-		Comment:            col.Comment,
-		Length:             col.Length,
-		AssociatedComments: convertAssociatedComments(col.AssociatedComments),
+		Name:             col.Colname,
+		Type:             *col.TypeName,
+		IsNotNull:        col.IsNotNull,
+		IsUnsigned:       col.IsUnsigned,
+		IsArray:          col.IsArray,
+		ArrayDims:        col.ArrayDims,
+		Comment:          col.Comment,
+		Length:           col.Length,
+		AttachedComments: convertAttachedComments(col.AttachedComments),
 	}
 	if col.Vals != nil {
 		typeName := ast.TypeName{

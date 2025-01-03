@@ -10,11 +10,10 @@ import (
 
 // Schema describes how the data in a relational database may relate to other tables or other data models
 type Schema struct {
-	Name    string
-	Tables  []*Table
-	Types   []Type
-	Funcs   []*Function
-	Indexes []*Index
+	Name   string
+	Tables []*Table
+	Types  []Type
+	Funcs  []*Function
 
 	Comment string
 }

@@ -70,17 +70,17 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 				vals := make([]*plugin.EnumValue, len(typ.Vals))
 				for i := range typ.Vals {
 					vals[i] = &plugin.EnumValue{
-						Value:              typ.EnumVals[i].Val,
-						AssociatedComments: pluginCommentGroup(typ.EnumVals[i].AssociatedComments),
+						Value:            typ.EnumVals[i].Val,
+						AttachedComments: pluginCommentGroup(typ.EnumVals[i].AttachedComments),
 					}
 				}
 
 				enums = append(enums, &plugin.Enum{
-					Name:               typ.Name,
-					Comment:            typ.Comment,
-					Vals:               typ.Vals,
-					Values:             vals,
-					AssociatedComments: pluginCommentGroup(typ.AssociatedComments),
+					Name:             typ.Name,
+					Comment:          typ.Comment,
+					Vals:             typ.Vals,
+					Values:           vals,
+					AttachedComments: pluginCommentGroup(typ.AttachedComments),
 				})
 			case *catalog.CompositeType:
 				cts = append(cts, &plugin.CompositeType{
@@ -115,7 +115,7 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 						Schema:  t.Rel.Schema,
 						Name:    t.Rel.Name,
 					},
-					AssociatedComments: pluginCommentGroup(c.AssociatedComments),
+					AttachedComments: pluginCommentGroup(c.AttachedComments),
 				})
 			}
 			var indexes []*plugin.Index
@@ -130,11 +130,11 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 				}
 
 				indexes = append(indexes, &plugin.Index{
-					Name:               idx.Name,
-					Elems:              elems,
-					IsUnique:           idx.IsUnique,
-					IsPrimary:          idx.IsPrimary,
-					AssociatedComments: pluginCommentGroup(idx.AssociatedComments),
+					Name:             idx.Name,
+					Elems:            elems,
+					IsUnique:         idx.IsUnique,
+					IsPrimary:        idx.IsPrimary,
+					AttachedComments: pluginCommentGroup(idx.AttachedComments),
 				})
 			}
 			tables = append(tables, &plugin.Table{
@@ -143,10 +143,10 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 					Schema:  t.Rel.Schema,
 					Name:    t.Rel.Name,
 				},
-				Columns:            columns,
-				Comment:            t.Comment,
-				Indexes:            indexes,
-				AssociatedComments: pluginCommentGroup(t.AssociatedComments),
+				Columns:          columns,
+				Comment:          t.Comment,
+				Indexes:          indexes,
+				AttachedComments: pluginCommentGroup(t.AttachedComments),
 			})
 		}
 		schemas = append(schemas, &plugin.Schema{

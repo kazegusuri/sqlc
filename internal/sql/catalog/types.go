@@ -15,16 +15,16 @@ type Type interface {
 }
 
 type Enum struct {
-	Name               string
-	Vals               []string
-	EnumVals           []*EnumValue
-	Comment            string
-	AssociatedComments []*CommentGroup
+	Name             string
+	Vals             []string
+	EnumVals         []*EnumValue
+	Comment          string
+	AttachedComments []*CommentGroup
 }
 
 type EnumValue struct {
-	Val                string
-	AssociatedComments []*CommentGroup
+	Val              string
+	AttachedComments []*CommentGroup
 }
 
 func (e *Enum) SetComment(c string) {
@@ -93,22 +93,22 @@ func (c *Catalog) createEnum(stmt *ast.CreateEnumStmt) error {
 	}
 
 	schema.Types = append(schema.Types, &Enum{
-		Name:               stmt.TypeName.Name,
-		Vals:               stringSlice(stmt.Vals),
-		EnumVals:           createEnumValue(stmt.Vals),
-		AssociatedComments: convertAssociatedComments(stmt.AssociatedComments),
+		Name:             stmt.TypeName.Name,
+		Vals:             stringSlice(stmt.Vals),
+		EnumVals:         createEnumValue(stmt.Vals),
+		AttachedComments: convertAttachedComments(stmt.AttachedComments),
 	})
 	return nil
 }
 
 func createEnumValue(list *ast.List) []*EnumValue {
-	vals, comments := stringSliceWithAssociatedComments(list)
+	vals, comments := stringSliceWithAttachedComments(list)
 
 	enumVals := make([]*EnumValue, len(vals))
 	for i := range vals {
 		enumVals[i] = &EnumValue{
-			Val:                vals[i],
-			AssociatedComments: comments[i],
+			Val:              vals[i],
+			AttachedComments: comments[i],
 		}
 	}
 
@@ -125,13 +125,13 @@ func stringSlice(list *ast.List) []string {
 	return items
 }
 
-func stringSliceWithAssociatedComments(list *ast.List) ([]string, [][]*CommentGroup) {
+func stringSliceWithAttachedComments(list *ast.List) ([]string, [][]*CommentGroup) {
 	items := []string{}
 	comments := [][]*CommentGroup{}
 	for _, item := range list.Items {
 		if n, ok := item.(*ast.String); ok {
 			items = append(items, n.Str)
-			comments = append(comments, convertAssociatedComments(n.AssociatedComments))
+			comments = append(comments, convertAttachedComments(n.AttachedComments))
 		}
 	}
 	return items, comments

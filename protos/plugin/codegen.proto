@@ -68,12 +68,12 @@ message Enum {
   repeated string vals = 2;
   string comment = 3;
   repeated EnumValue values = 4;
-  repeated CommentGroup associated_comments = 5;
+  repeated CommentGroup attached_comments = 5;
 }
 
 message EnumValue {
   string value = 1;
-  repeated CommentGroup associated_comments = 2;
+  repeated CommentGroup attached_comments = 2;
 }
 
 message Table {
@@ -81,7 +81,7 @@ message Table {
   repeated Column columns = 2;
   string comment = 3;
   repeated Index indexes = 4;
-  repeated CommentGroup associated_comments = 5;
+  repeated CommentGroup attached_comments = 5;
 }
 
 message Index {
@@ -89,7 +89,7 @@ message Index {
   repeated IndexElem elems = 2;
   bool is_unique = 3;
   bool is_primary = 4;
-  repeated CommentGroup associated_comments = 5;
+  repeated CommentGroup attached_comments = 5;
 }
 
 message IndexElem {
@@ -139,7 +139,7 @@ message Column {
   bool unsigned = 16;
   int32 array_dims = 17;
 
-  repeated CommentGroup associated_comments = 18;
+  repeated CommentGroup attached_comments = 18;
 }
 
 enum CommentType {

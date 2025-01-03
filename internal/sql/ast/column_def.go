@@ -1,16 +1,16 @@
 package ast
 
 type ColumnDef struct {
-	Colname            string
-	TypeName           *TypeName
-	IsNotNull          bool
-	IsUnsigned         bool
-	IsArray            bool
-	ArrayDims          int
-	Vals               *List
-	Length             *int
-	PrimaryKey         bool
-	AssociatedComments []*SQLCommentGroup
+	Colname          string
+	TypeName         *TypeName
+	IsNotNull        bool
+	IsUnsigned       bool
+	IsArray          bool
+	ArrayDims        int
+	Vals             *List
+	Length           *int
+	PrimaryKey       bool
+	AttachedComments []*SQLCommentGroup
 
 	// From pg.ColumnDef
 	Inhcount      int

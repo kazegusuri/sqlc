@@ -5,11 +5,11 @@ import (
 )
 
 type Index struct {
-	Name               string
-	Elems              []*IndexElem
-	IsUnique           bool
-	IsPrimary          bool
-	AssociatedComments []*CommentGroup
+	Name             string
+	Elems            []*IndexElem
+	IsUnique         bool
+	IsPrimary        bool
+	AttachedComments []*CommentGroup
 }
 
 func (c *Catalog) createIndex(stmt *ast.IndexStmt) error {
@@ -40,10 +40,10 @@ func (c *Catalog) createIndex(stmt *ast.IndexStmt) error {
 	}
 
 	idx := &Index{
-		Name:               name,
-		IsUnique:           stmt.Unique,
-		IsPrimary:          stmt.Primary,
-		AssociatedComments: convertAssociatedComments(stmt.AssociatedComments),
+		Name:             name,
+		IsUnique:         stmt.Unique,
+		IsPrimary:        stmt.Primary,
+		AttachedComments: convertAttachedComments(stmt.AttachedComments),
 	}
 
 	if stmt.IndexParams != nil {

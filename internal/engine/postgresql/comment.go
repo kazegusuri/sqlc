@@ -41,7 +41,7 @@ func (d *CommentsDispatcher) makeASTCommentGroup(g *CommentGroup, s ast.SQLComme
 	}
 }
 
-func (d *CommentsDispatcher) AssociatedCommentGroups(offset int32) []*ast.SQLCommentGroup {
+func (d *CommentsDispatcher) AttachedCommentGroups(offset int32) []*ast.SQLCommentGroup {
 
 	var trailingComment *ast.SQLCommentGroup
 	if group := d.lineCommentGroups(offset); group != nil {

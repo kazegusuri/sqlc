@@ -14,7 +14,7 @@ type CommentGroup struct {
 	Type     CommentType
 }
 
-func convertAssociatedComments(gs []*ast.SQLCommentGroup) []*CommentGroup {
+func convertAttachedComments(gs []*ast.SQLCommentGroup) []*CommentGroup {
 	var groups []*CommentGroup
 	for _, g := range gs {
 		var comments []string

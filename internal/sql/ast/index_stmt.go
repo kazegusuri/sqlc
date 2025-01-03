@@ -20,7 +20,7 @@ type IndexStmt struct {
 	Concurrent     bool
 	IfNotExists    bool
 
-	AssociatedComments []*SQLCommentGroup
+	AttachedComments []*SQLCommentGroup
 }
 
 func (n *IndexStmt) Pos() int {

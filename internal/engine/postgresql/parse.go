@@ -184,7 +184,7 @@ func (p *Parser) Parse(r io.Reader) ([]ast.Statement, error) {
 		})
 
 		// discard comments not read in the statement
-		_ = dispatcher.AssociatedCommentGroups(raw.StmtLocation + raw.StmtLen)
+		_ = dispatcher.AttachedCommentGroups(raw.StmtLocation + raw.StmtLen)
 	}
 	return stmts, nil
 }
@@ -410,11 +410,11 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 		n := inner.CreateStmt
 
 		rel := parseRelationFromRangeVar(n.Relation)
-		comments := dispatcher.AssociatedCommentGroups(n.Relation.Location)
+		comments := dispatcher.AttachedCommentGroups(n.Relation.Location)
 		create := &ast.CreateTableStmt{
-			Name:               rel.TableName(),
-			IfNotExists:        n.IfNotExists,
-			AssociatedComments: comments,
+			Name:             rel.TableName(),
+			IfNotExists:      n.IfNotExists,
+			AttachedComments: comments,
 		}
 		for _, node := range n.InhRelations {
 			switch item := node.Node.(type) {
@@ -454,11 +454,11 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 					keys = append(keys, key.Node.(*nodes.Node_String_).String_.Sval)
 				}
 
-				comments := dispatcher.AssociatedCommentGroups(item.Constraint.Location)
+				comments := dispatcher.AttachedCommentGroups(item.Constraint.Location)
 
 				constraint := &ast.CreateTableConstraint{
-					Keys:               keys,
-					AssociatedComments: comments,
+					Keys:             keys,
+					AttachedComments: comments,
 				}
 
 				switch item.Constraint.Contype {
@@ -492,16 +492,16 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 				}
 
 				_, isPrimary := primaryKeyNames[item.ColumnDef.Colname]
-				comments := dispatcher.AssociatedCommentGroups(item.ColumnDef.Location)
+				comments := dispatcher.AttachedCommentGroups(item.ColumnDef.Location)
 
 				create.Cols = append(create.Cols, &ast.ColumnDef{
-					Colname:            item.ColumnDef.Colname,
-					TypeName:           rel.TypeName(),
-					IsNotNull:          isNotNull(item.ColumnDef) || isPrimary,
-					IsArray:            isArray(item.ColumnDef.TypeName),
-					ArrayDims:          len(item.ColumnDef.TypeName.ArrayBounds),
-					PrimaryKey:         isPrimary,
-					AssociatedComments: comments,
+					Colname:          item.ColumnDef.Colname,
+					TypeName:         rel.TypeName(),
+					IsNotNull:        isNotNull(item.ColumnDef) || isPrimary,
+					IsArray:          isArray(item.ColumnDef.TypeName),
+					ArrayDims:        len(item.ColumnDef.TypeName.ArrayBounds),
+					PrimaryKey:       isPrimary,
+					AttachedComments: comments,
 				})
 			}
 		}
@@ -524,7 +524,7 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 
 		// search location by string and associate comments near it
 		if loc := dispatcher.FindLocationInStatement(raw, "CREATE TYPE"); loc >= 0 {
-			stmt.AssociatedComments = dispatcher.AssociatedCommentGroups(loc)
+			stmt.AttachedComments = dispatcher.AttachedCommentGroups(loc)
 		}
 
 		for _, val := range n.Vals {
@@ -538,7 +538,7 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 
 				// search location by string and associate comments near it
 				if loc := dispatcher.FindLocationInStatement(raw, fmt.Sprintf("'%s'", val)); loc >= 0 {
-					str.AssociatedComments = dispatcher.AssociatedCommentGroups(loc)
+					str.AttachedComments = dispatcher.AttachedCommentGroups(loc)
 				}
 			}
 		}
@@ -709,8 +709,8 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 
 	case *nodes.Node_IndexStmt:
 		indexStmt := convertIndexStmt(inner.IndexStmt)
-		comments := dispatcher.AssociatedCommentGroups(inner.IndexStmt.Relation.Location)
-		indexStmt.AssociatedComments = comments
+		comments := dispatcher.AttachedCommentGroups(inner.IndexStmt.Relation.Location)
+		indexStmt.AttachedComments = comments
 		return indexStmt, nil
 
 	default:
