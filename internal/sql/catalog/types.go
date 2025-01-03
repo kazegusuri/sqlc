@@ -15,16 +15,16 @@ type Type interface {
 }
 
 type Enum struct {
-	Name             string
-	Vals             []string
-	EnumVals         []*EnumValue
-	Comment          string
-	AttachedComments []*CommentGroup
+	Name           string
+	Vals           []string
+	EnumVals       []*EnumValue
+	Comment        string
+	SourceLocation *SourceLocation
 }
 
 type EnumValue struct {
-	Val              string
-	AttachedComments []*CommentGroup
+	Val            string
+	SourceLocation *SourceLocation
 }
 
 func (e *Enum) SetComment(c string) {
@@ -93,22 +93,22 @@ func (c *Catalog) createEnum(stmt *ast.CreateEnumStmt) error {
 	}
 
 	schema.Types = append(schema.Types, &Enum{
-		Name:             stmt.TypeName.Name,
-		Vals:             stringSlice(stmt.Vals),
-		EnumVals:         createEnumValue(stmt.Vals),
-		AttachedComments: convertAttachedComments(stmt.AttachedComments),
+		Name:           stmt.TypeName.Name,
+		Vals:           stringSlice(stmt.Vals),
+		EnumVals:       createEnumValue(stmt.Vals),
+		SourceLocation: convertSourceLocation(stmt.SourceLocation),
 	})
 	return nil
 }
 
 func createEnumValue(list *ast.List) []*EnumValue {
-	vals, comments := stringSliceWithAttachedComments(list)
+	vals, locations := stringSliceWithSourceLocation(list)
 
 	enumVals := make([]*EnumValue, len(vals))
 	for i := range vals {
 		enumVals[i] = &EnumValue{
-			Val:              vals[i],
-			AttachedComments: comments[i],
+			Val:            vals[i],
+			SourceLocation: locations[i],
 		}
 	}
 
@@ -125,16 +125,16 @@ func stringSlice(list *ast.List) []string {
 	return items
 }
 
-func stringSliceWithAttachedComments(list *ast.List) ([]string, [][]*CommentGroup) {
+func stringSliceWithSourceLocation(list *ast.List) ([]string, []*SourceLocation) {
 	items := []string{}
-	comments := [][]*CommentGroup{}
+	locations := []*SourceLocation{}
 	for _, item := range list.Items {
 		if n, ok := item.(*ast.String); ok {
 			items = append(items, n.Str)
-			comments = append(comments, convertAttachedComments(n.AttachedComments))
+			locations = append(locations, convertSourceLocation(n.SourceLocation))
 		}
 	}
-	return items, comments
+	return items, locations
 }
 
 func (c *Catalog) getType(rel *ast.TypeName) (Type, int, error) {

@@ -68,12 +68,12 @@ message Enum {
   repeated string vals = 2;
   string comment = 3;
   repeated EnumValue values = 4;
-  repeated CommentGroup attached_comments = 5;
+  SourceLocation source_location = 5;
 }
 
 message EnumValue {
   string value = 1;
-  repeated CommentGroup attached_comments = 2;
+  SourceLocation source_location = 2;
 }
 
 message Table {
@@ -81,7 +81,7 @@ message Table {
   repeated Column columns = 2;
   string comment = 3;
   repeated Index indexes = 4;
-  repeated CommentGroup attached_comments = 5;
+  SourceLocation source_location = 5;
 }
 
 message Index {
@@ -89,7 +89,7 @@ message Index {
   repeated IndexElem elems = 2;
   bool is_unique = 3;
   bool is_primary = 4;
-  repeated CommentGroup attached_comments = 5;
+  SourceLocation source_location = 5;
 }
 
 message IndexElem {
@@ -139,18 +139,19 @@ message Column {
   bool unsigned = 16;
   int32 array_dims = 17;
 
-  repeated CommentGroup attached_comments = 18;
+  SourceLocation source_location = 18;
 }
 
-enum CommentType {
-  COMMENT_TYPE_UNDEFINED = 0;
-  COMMENT_TYPE_LEADING = 1;
-  COMMENT_TYPE_TRAILING = 2;
-}
+message SourceLocation {
+  string filename = 1;
+  int32 start_line = 2;
+  int32 start_column = 3;
+  int32 end_line = 4;
+  int32 end_column = 5;
 
-message CommentGroup {
-  repeated string comments = 1;
-  CommentType comment_type = 2;
+  repeated string LeadingDetachedComments = 6;
+  string LeadingComments = 7;
+  string TrailingComments = 8;
 }
 
 message Query {

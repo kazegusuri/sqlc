@@ -37,7 +37,7 @@ func NewParser() *Parser {
 type Parser struct {
 }
 
-func (p *Parser) Parse(r io.Reader) ([]ast.Statement, error) {
+func (p *Parser) Parse(r io.Reader, filename string) ([]ast.Statement, error) {
 	blob, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err

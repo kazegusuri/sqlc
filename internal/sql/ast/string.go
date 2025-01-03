@@ -4,7 +4,7 @@ type String struct {
 	Str string
 
 	// Comments attached with this string.
-	AttachedComments []*SQLCommentGroup
+	SourceLocation *SourceLocation
 }
 
 func (n *String) Pos() int {

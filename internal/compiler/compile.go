@@ -20,7 +20,7 @@ import (
 
 // TODO: Rename this interface Engine
 type Parser interface {
-	Parse(io.Reader) ([]ast.Statement, error)
+	Parse(io.Reader, string) ([]ast.Statement, error)
 	CommentSyntax() source.CommentSyntax
 	IsReservedKeyword(string) bool
 }
@@ -39,7 +39,7 @@ func (c *Compiler) parseCatalog(schemas []string) error {
 		}
 		contents := migrations.RemoveRollbackStatements(string(blob))
 		c.schema = append(c.schema, contents)
-		stmts, err := c.parser.Parse(strings.NewReader(contents))
+		stmts, err := c.parser.Parse(strings.NewReader(contents), filename)
 		if err != nil {
 			merr.Add(filename, contents, 0, err)
 			continue
@@ -72,13 +72,13 @@ func (c *Compiler) parseQueries(o opts.Parser) (*Result, error) {
 			continue
 		}
 		src := string(blob)
-		stmts, err := c.parser.Parse(strings.NewReader(src))
+		stmts, err := c.parser.Parse(strings.NewReader(src), filename)
 		if err != nil {
 			merr.Add(filename, src, 0, err)
 			continue
 		}
 		for _, stmt := range stmts {
-			query, err := c.parseQuery(stmt.Raw, src, o)
+			query, err := c.parseQuery(stmt.Raw, src, filename, o)
 			if err != nil {
 				var e *sqlerr.Error
 				loc := stmt.Raw.Pos()

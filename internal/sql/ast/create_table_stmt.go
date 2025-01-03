@@ -1,14 +1,15 @@
 package ast
 
 type CreateTableStmt struct {
-	IfNotExists      bool
-	Name             *TableName
-	Cols             []*ColumnDef
-	ReferTable       *TableName
-	Comment          string
-	Inherits         []*TableName
-	Constraints      []*CreateTableConstraint
-	AttachedComments []*SQLCommentGroup
+	IfNotExists bool
+	Name        *TableName
+	Cols        []*ColumnDef
+	ReferTable  *TableName
+	Comment     string
+	Inherits    []*TableName
+	Constraints []*CreateTableConstraint
+
+	SourceLocation *SourceLocation
 }
 
 func (n *CreateTableStmt) Pos() int {
@@ -33,8 +34,9 @@ func (n *CreateTableStmt) Format(buf *TrackedBuffer) {
 }
 
 type CreateTableConstraint struct {
-	Keys             []string
-	Primary          bool
-	Unique           bool
-	AttachedComments []*SQLCommentGroup
+	Keys    []string
+	Primary bool
+	Unique  bool
+
+	SourceLocation *SourceLocation
 }

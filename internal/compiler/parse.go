@@ -15,7 +15,7 @@ import (
 	"github.com/sqlc-dev/sqlc/internal/sql/validate"
 )
 
-func (c *Compiler) parseQuery(stmt ast.Node, src string, o opts.Parser) (*Query, error) {
+func (c *Compiler) parseQuery(stmt ast.Node, src string, filename string, o opts.Parser) (*Query, error) {
 	ctx := context.Background()
 
 	if o.Debug.DumpAST {
@@ -110,7 +110,7 @@ func (c *Compiler) parseQuery(stmt ast.Node, src string, o opts.Parser) (*Query,
 
 	// If the query string was edited, make sure the syntax is valid
 	if expanded != rawSQL {
-		if _, err := c.parser.Parse(strings.NewReader(expanded)); err != nil {
+		if _, err := c.parser.Parse(strings.NewReader(expanded), filename); err != nil {
 			return nil, fmt.Errorf("edited query syntax is invalid: %w", err)
 		}
 	}

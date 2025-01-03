@@ -1,9 +1,10 @@
 package ast
 
 type CreateEnumStmt struct {
-	TypeName         *TypeName
-	Vals             *List
-	AttachedComments []*SQLCommentGroup
+	TypeName *TypeName
+	Vals     *List
+
+	SourceLocation *SourceLocation
 }
 
 func (n *CreateEnumStmt) Pos() int {

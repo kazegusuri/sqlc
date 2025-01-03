@@ -13,11 +13,11 @@ import (
 func TestApply(t *testing.T) {
 	p := NewParser()
 
-	input, err := p.Parse(strings.NewReader("SELECT sqlc.arg(name)"))
+	input, err := p.Parse(strings.NewReader("SELECT sqlc.arg(name)"), "test")
 	if err != nil {
 		t.Fatal(err)
 	}
-	output, err := p.Parse(strings.NewReader("SELECT $1"))
+	output, err := p.Parse(strings.NewReader("SELECT $1"), "test")
 	if err != nil {
 		t.Fatal(err)
 	}

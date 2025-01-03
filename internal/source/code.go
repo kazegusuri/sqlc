@@ -21,6 +21,18 @@ type CommentSyntax struct {
 	SlashStar bool
 }
 
+type Location struct {
+	Filename    string
+	StartLine   int
+	StartColumn int
+	EndLine     int
+	EndColumn   int
+
+	LeadingDetachedComments []string
+	LeadingComments         string
+	TrailingComments        string
+}
+
 func LineNumber(source string, head int) (int, int) {
 	// Calculate the true line and column number for a query, ignoring spaces
 	var comment bool

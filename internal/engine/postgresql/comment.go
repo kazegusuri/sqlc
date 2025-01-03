@@ -1,21 +1,20 @@
 package postgresql
 
 import (
-	"bufio"
 	"bytes"
 	"slices"
-	"sort"
 	"strings"
 
 	nodes "github.com/pganalyze/pg_query_go/v5"
+	"github.com/sqlc-dev/sqlc/internal/source"
 	"github.com/sqlc-dev/sqlc/internal/sql/ast"
 )
 
 type CommentsDispatcher struct {
-	linePos  []int64
-	curGroup int
-	groups   []*CommentGroup
-	contents string
+	curGroup  int
+	groups    []*CommentGroup
+	contents  string
+	locations *SourceLocations
 }
 
 func (d *CommentsDispatcher) FindLocationInStatement(stmt *nodes.RawStmt, str string) int32 {
@@ -27,37 +26,34 @@ func (d *CommentsDispatcher) FindLocationInStatement(stmt *nodes.RawStmt, str st
 	return -1
 }
 
-func (d *CommentsDispatcher) makeASTCommentGroup(g *CommentGroup, s ast.SQLCommentType) *ast.SQLCommentGroup {
-	comments := make([]*ast.SQLComment, len(g.Comments))
-	for i := range g.Comments {
-		comments[i] = &ast.SQLComment{
-			Text: g.Comments[i].Text,
-		}
-	}
+func (d *CommentsDispatcher) SourceLocationWithComments(offset int32) *ast.SourceLocation {
+	loc := d.locations.GetSourceLocation(offset)
 
-	return &ast.SQLCommentGroup{
-		Comments: comments,
-		Type:     s,
-	}
-}
-
-func (d *CommentsDispatcher) AttachedCommentGroups(offset int32) []*ast.SQLCommentGroup {
-
-	var trailingComment *ast.SQLCommentGroup
+	var trailingComment string
 	if group := d.lineCommentGroups(offset); group != nil {
-		trailingComment = d.makeASTCommentGroup(group, ast.SQLTrailingComment)
+		var comments []string
+		for _, c := range group.Comments {
+			comments = append(comments, c.Text)
+		}
+		trailingComment = strings.Join(comments, "\n")
 	}
 
-	var comments []*ast.SQLCommentGroup
+	var leadingComments []string
 	for _, group := range d.leadingCommentGroups(offset) {
-		comments = append(comments, d.makeASTCommentGroup(group, ast.SQLLeadingComment))
+		var comments []string
+		for _, c := range group.Comments {
+			comments = append(comments, c.Text)
+		}
+		leadingComments = append(leadingComments, strings.Join(comments, "\n"))
 	}
 
-	if trailingComment != nil {
-		comments = append(comments, trailingComment)
+	if len(leadingComments) != 0 {
+		loc.LeadingComments = leadingComments[len(leadingComments)-1]
+		loc.LeadingDetachedComments = leadingComments[0 : len(leadingComments)-1]
 	}
+	loc.TrailingComments = trailingComment
 
-	return comments
+	return loc
 }
 
 func (d *CommentsDispatcher) leadingCommentGroups(offset int32) []*CommentGroup {
@@ -74,17 +70,11 @@ func (d *CommentsDispatcher) leadingCommentGroups(offset int32) []*CommentGroup 
 	return groups
 }
 
-func (d *CommentsDispatcher) getLineNo(offset int32) int32 {
-	index := sort.Search(len(d.linePos), func(i int) bool {
-		return d.linePos[i] >= int64(offset)
-	})
-	return int32(index + 1)
-}
-
 func (d *CommentsDispatcher) lineCommentGroups(offset int32) *CommentGroup {
-	lineNo := d.getLineNo(offset)
+	lineNo, _ := d.locations.GetPosition(offset)
 	pos := slices.IndexFunc(d.groups[d.curGroup:], func(g *CommentGroup) bool {
-		return lineNo == d.getLineNo(g.Start())
+		lineNo2, _ := d.locations.GetPosition(g.Start())
+		return lineNo == lineNo2
 	})
 	if pos < 0 {
 		return nil
@@ -136,34 +126,7 @@ func scanLines(data []byte, eof bool) (int, []byte, error) {
 	return 0, nil, nil
 }
 
-func getLinePositions(contents string) ([]int64, error) {
-	r := strings.NewReader(contents)
-	scanner := bufio.NewScanner(r)
-	scanner.Split(scanLines)
-
-	var lines []int64
-	n := int64(0)
-	for scanner.Scan() {
-		b := scanner.Bytes()
-		eol := n
-		n += int64(len(b))
-		eol += int64(len(b))
-		lines = append(lines, eol)
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	return lines, nil
-}
-
-func parseComments(contents string) (*CommentsDispatcher, error) {
-	linePos, err := getLinePositions(contents)
-	if err != nil {
-		return nil, err
-	}
-
+func newCommentDispatcher(contents string, locations *SourceLocations) (*CommentsDispatcher, error) {
 	result, err := ParseScan(contents)
 	if err != nil {
 		pErr := normalizeErr(err)
@@ -175,10 +138,19 @@ func parseComments(contents string) (*CommentsDispatcher, error) {
 	for _, token := range result.Tokens {
 		switch token.Token {
 		case nodes.Token_SQL_COMMENT, nodes.Token_C_COMMENT:
+			syntax := source.CommentSyntax{
+				Dash:      true,
+				Hash:      true,
+				SlashStar: true,
+			}
+			texts, err := source.CleanedComments(string(contents[token.Start:token.End]), syntax)
+			if err != nil {
+				return nil, err
+			}
 			c := &Comment{
 				Start: token.Start,
 				End:   token.End,
-				Text:  string(contents[token.Start:token.End]),
+				Text:  strings.Join(texts, ""),
 			}
 
 			if len(comments) != 0 {
@@ -209,8 +181,8 @@ func parseComments(contents string) (*CommentsDispatcher, error) {
 	}
 
 	return &CommentsDispatcher{
-		linePos:  linePos,
-		groups:   commentGroups,
-		contents: contents,
+		groups:    commentGroups,
+		contents:  contents,
+		locations: locations,
 	}, nil
 }

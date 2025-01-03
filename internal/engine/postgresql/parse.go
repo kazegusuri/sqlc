@@ -146,18 +146,24 @@ type Parser struct {
 
 var errSkip = errors.New("skip stmt")
 
-func (p *Parser) Parse(r io.Reader) ([]ast.Statement, error) {
-	contents, err := io.ReadAll(r)
+func (p *Parser) Parse(r io.Reader, filename string) ([]ast.Statement, error) {
+	contentsByte, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	contents := string(contentsByte)
+
+	locations, err := newSourceLocations(filename, contents)
 	if err != nil {
 		return nil, err
 	}
 
-	dispatcher, err := parseComments(string(contents))
+	dispatcher, err := newCommentDispatcher(contents, locations)
 	if err != nil {
 		return nil, err
 	}
 
-	tree, err := Parse(string(contents))
+	tree, err := Parse(contents)
 	if err != nil {
 		pErr := normalizeErr(err)
 		return nil, pErr
@@ -184,7 +190,7 @@ func (p *Parser) Parse(r io.Reader) ([]ast.Statement, error) {
 		})
 
 		// discard comments not read in the statement
-		_ = dispatcher.AttachedCommentGroups(raw.StmtLocation + raw.StmtLen)
+		_ = dispatcher.SourceLocationWithComments(raw.StmtLocation + raw.StmtLen)
 	}
 	return stmts, nil
 }
@@ -410,12 +416,17 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 		n := inner.CreateStmt
 
 		rel := parseRelationFromRangeVar(n.Relation)
-		comments := dispatcher.AttachedCommentGroups(n.Relation.Location)
+
 		create := &ast.CreateTableStmt{
-			Name:             rel.TableName(),
-			IfNotExists:      n.IfNotExists,
-			AttachedComments: comments,
+			Name:        rel.TableName(),
+			IfNotExists: n.IfNotExists,
 		}
+
+		// search location by string and associate comments near it
+		if pos := dispatcher.FindLocationInStatement(raw, "CREATE TABLE"); pos >= 0 {
+			create.SourceLocation = dispatcher.SourceLocationWithComments(pos)
+		}
+
 		for _, node := range n.InhRelations {
 			switch item := node.Node.(type) {
 			case *nodes.Node_RangeVar:
@@ -454,11 +465,9 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 					keys = append(keys, key.Node.(*nodes.Node_String_).String_.Sval)
 				}
 
-				comments := dispatcher.AttachedCommentGroups(item.Constraint.Location)
-
 				constraint := &ast.CreateTableConstraint{
-					Keys:             keys,
-					AttachedComments: comments,
+					Keys:           keys,
+					SourceLocation: dispatcher.SourceLocationWithComments(item.Constraint.Location),
 				}
 
 				switch item.Constraint.Contype {
@@ -492,16 +501,14 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 				}
 
 				_, isPrimary := primaryKeyNames[item.ColumnDef.Colname]
-				comments := dispatcher.AttachedCommentGroups(item.ColumnDef.Location)
-
 				create.Cols = append(create.Cols, &ast.ColumnDef{
-					Colname:          item.ColumnDef.Colname,
-					TypeName:         rel.TypeName(),
-					IsNotNull:        isNotNull(item.ColumnDef) || isPrimary,
-					IsArray:          isArray(item.ColumnDef.TypeName),
-					ArrayDims:        len(item.ColumnDef.TypeName.ArrayBounds),
-					PrimaryKey:       isPrimary,
-					AttachedComments: comments,
+					Colname:        item.ColumnDef.Colname,
+					TypeName:       rel.TypeName(),
+					IsNotNull:      isNotNull(item.ColumnDef) || isPrimary,
+					IsArray:        isArray(item.ColumnDef.TypeName),
+					ArrayDims:      len(item.ColumnDef.TypeName.ArrayBounds),
+					PrimaryKey:     isPrimary,
+					SourceLocation: dispatcher.SourceLocationWithComments(item.ColumnDef.Location),
 				})
 			}
 		}
@@ -523,8 +530,8 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 		}
 
 		// search location by string and associate comments near it
-		if loc := dispatcher.FindLocationInStatement(raw, "CREATE TYPE"); loc >= 0 {
-			stmt.AttachedComments = dispatcher.AttachedCommentGroups(loc)
+		if pos := dispatcher.FindLocationInStatement(raw, "CREATE TYPE"); pos >= 0 {
+			stmt.SourceLocation = dispatcher.SourceLocationWithComments(pos)
 		}
 
 		for _, val := range n.Vals {
@@ -537,8 +544,8 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 				stmt.Vals.Items = append(stmt.Vals.Items, str)
 
 				// search location by string and associate comments near it
-				if loc := dispatcher.FindLocationInStatement(raw, fmt.Sprintf("'%s'", val)); loc >= 0 {
-					str.AttachedComments = dispatcher.AttachedCommentGroups(loc)
+				if pos := dispatcher.FindLocationInStatement(raw, fmt.Sprintf("'%s'", val)); pos >= 0 {
+					str.SourceLocation = dispatcher.SourceLocationWithComments(pos)
 				}
 			}
 		}
@@ -709,8 +716,11 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 
 	case *nodes.Node_IndexStmt:
 		indexStmt := convertIndexStmt(inner.IndexStmt)
-		comments := dispatcher.AttachedCommentGroups(inner.IndexStmt.Relation.Location)
-		indexStmt.AttachedComments = comments
+
+		// search location by string and associate comments near it
+		if pos := dispatcher.FindLocationInStatement(raw, "CREATE "); pos >= 0 {
+			indexStmt.SourceLocation = dispatcher.SourceLocationWithComments(pos)
+		}
 		return indexStmt, nil
 
 	default:

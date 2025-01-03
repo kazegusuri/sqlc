@@ -233,7 +233,7 @@ func TestUpdate(t *testing.T) {
 	} {
 		test := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			stmts, err := p.Parse(strings.NewReader(test.stmt))
+			stmts, err := p.Parse(strings.NewReader(test.stmt), "test")
 			if err != nil {
 				t.Log(test.stmt)
 				t.Fatal(err)

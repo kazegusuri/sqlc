@@ -70,17 +70,17 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 				vals := make([]*plugin.EnumValue, len(typ.Vals))
 				for i := range typ.Vals {
 					vals[i] = &plugin.EnumValue{
-						Value:            typ.EnumVals[i].Val,
-						AttachedComments: pluginCommentGroup(typ.EnumVals[i].AttachedComments),
+						Value:          typ.EnumVals[i].Val,
+						SourceLocation: pluginSourceLocation(typ.EnumVals[i].SourceLocation),
 					}
 				}
 
 				enums = append(enums, &plugin.Enum{
-					Name:             typ.Name,
-					Comment:          typ.Comment,
-					Vals:             typ.Vals,
-					Values:           vals,
-					AttachedComments: pluginCommentGroup(typ.AttachedComments),
+					Name:           typ.Name,
+					Comment:        typ.Comment,
+					Vals:           typ.Vals,
+					Values:         vals,
+					SourceLocation: pluginSourceLocation(typ.SourceLocation),
 				})
 			case *catalog.CompositeType:
 				cts = append(cts, &plugin.CompositeType{
@@ -115,7 +115,7 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 						Schema:  t.Rel.Schema,
 						Name:    t.Rel.Name,
 					},
-					AttachedComments: pluginCommentGroup(c.AttachedComments),
+					SourceLocation: pluginSourceLocation(c.SourceLocation),
 				})
 			}
 			var indexes []*plugin.Index
@@ -130,11 +130,11 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 				}
 
 				indexes = append(indexes, &plugin.Index{
-					Name:             idx.Name,
-					Elems:            elems,
-					IsUnique:         idx.IsUnique,
-					IsPrimary:        idx.IsPrimary,
-					AttachedComments: pluginCommentGroup(idx.AttachedComments),
+					Name:           idx.Name,
+					Elems:          elems,
+					IsUnique:       idx.IsUnique,
+					IsPrimary:      idx.IsPrimary,
+					SourceLocation: pluginSourceLocation(idx.SourceLocation),
 				})
 			}
 			tables = append(tables, &plugin.Table{
@@ -143,10 +143,10 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 					Schema:  t.Rel.Schema,
 					Name:    t.Rel.Name,
 				},
-				Columns:          columns,
-				Comment:          t.Comment,
-				Indexes:          indexes,
-				AttachedComments: pluginCommentGroup(t.AttachedComments),
+				Columns:        columns,
+				Comment:        t.Comment,
+				Indexes:        indexes,
+				SourceLocation: pluginSourceLocation(t.SourceLocation),
 			})
 		}
 		schemas = append(schemas, &plugin.Schema{
@@ -165,22 +165,20 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 	}
 }
 
-func pluginCommentGroup(comments []*catalog.CommentGroup) []*plugin.CommentGroup {
-	var out []*plugin.CommentGroup
-	for _, cg := range comments {
-		var typ plugin.CommentType
-		switch cg.Type {
-		case catalog.LeadingComment:
-			typ = plugin.CommentType_COMMENT_TYPE_LEADING
-		case catalog.TrailingComment:
-			typ = plugin.CommentType_COMMENT_TYPE_TRAILING
-		}
-		out = append(out, &plugin.CommentGroup{
-			Comments:    cg.Comments,
-			CommentType: typ,
-		})
+func pluginSourceLocation(loc *catalog.SourceLocation) *plugin.SourceLocation {
+	if loc == nil {
+		return nil
 	}
-	return out
+	return &plugin.SourceLocation{
+		Filename:                loc.Filename,
+		StartLine:               int32(loc.StartLine),
+		StartColumn:             int32(loc.StartColumn),
+		EndLine:                 0,
+		EndColumn:               0,
+		LeadingDetachedComments: loc.LeadingDetachedComments,
+		LeadingComments:         loc.LeadingComments,
+		TrailingComments:        loc.TrailingComments,
+	}
 }
 
 func pluginQueries(r *compiler.Result) []*plugin.Query {

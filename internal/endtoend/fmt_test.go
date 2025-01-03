@@ -43,7 +43,7 @@ func TestFormat(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					stmts, err := parse.Parse(bytes.NewReader(query))
+					stmts, err := parse.Parse(bytes.NewReader(query), "test")
 					if err != nil {
 						t.Fatal(err)
 					}

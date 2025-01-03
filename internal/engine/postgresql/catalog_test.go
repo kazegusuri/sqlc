@@ -38,7 +38,51 @@ func TestUpdate(t *testing.T) {
 							{
 								Name: "bar",
 								Type: ast.TypeName{Name: "text"},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 21,
+								},
 							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
+						},
+					},
+				},
+			},
+		},
+		{
+			"CREATE TABLE foo (foo text);\nCREATE TABLE bar (bar text);",
+			&catalog.Schema{
+				Name: "main",
+				Tables: []*catalog.Table{
+					{
+						Rel: &ast.TableName{Name: "foo"},
+						Columns: []*catalog.Column{
+							{
+								Name: "foo",
+								Type: ast.TypeName{Name: "text"},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 0, StartColumn: 18,
+								},
+							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 0, StartColumn: 0,
+						},
+					},
+					{
+						Rel: &ast.TableName{Name: "bar"},
+						Columns: []*catalog.Column{
+							{
+								Name: "bar",
+								Type: ast.TypeName{Name: "text"},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 18,
+								},
+							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 0,
 						},
 					},
 				},
@@ -57,10 +101,14 @@ func TestUpdate(t *testing.T) {
 							{
 								Name: "bar",
 								Type: ast.TypeName{Name: "text"},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 21,
+								},
 							},
 						},
-						AssociatedComments: []*catalog.CommentGroup{
-							{Comments: []string{"-- foo's comment"}, Type: catalog.TrailingComment},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
+							TrailingComments: ` foo's comment`,
 						},
 					},
 				},
@@ -80,11 +128,15 @@ func TestUpdate(t *testing.T) {
 							{
 								Name: "bar",
 								Type: ast.TypeName{Name: "text"},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 2, StartColumn: 21,
+								},
 							},
 						},
-						AssociatedComments: []*catalog.CommentGroup{
-							{Comments: []string{"-- foo's leading comment"}, Type: catalog.LeadingComment},
-							{Comments: []string{"-- foo's trailing comment"}, Type: catalog.TrailingComment},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 2, StartColumn: 3,
+							LeadingComments:  ` foo's leading comment`,
+							TrailingComments: ` foo's trailing comment`,
 						},
 					},
 				},
@@ -92,10 +144,11 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			`
-			-- foo's leading comment1
-			-- foo is a table
+			-- foo's leading detached comment
+			-- comment2
 
-			-- foo's leading comment2
+			-- foo's leading comment
+			-- comment2
 			CREATE TABLE foo (bar text); -- foo's trailing comment
 			 -- foo's definition ends
 			`,
@@ -108,29 +161,16 @@ func TestUpdate(t *testing.T) {
 							{
 								Name: "bar",
 								Type: ast.TypeName{Name: "text"},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 6, StartColumn: 21,
+								},
 							},
 						},
-						AssociatedComments: []*catalog.CommentGroup{
-							{
-								Comments: []string{
-									"-- foo's leading comment1",
-									"-- foo is a table",
-								},
-								Type: catalog.LeadingComment,
-							},
-							{
-								Comments: []string{
-									"-- foo's leading comment2",
-								},
-								Type: catalog.LeadingComment,
-							},
-							{
-								Comments: []string{
-									"-- foo's trailing comment",
-									"-- foo's definition ends",
-								},
-								Type: catalog.TrailingComment,
-							},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 6, StartColumn: 3,
+							LeadingDetachedComments: []string{" foo's leading detached comment\n comment2"},
+							LeadingComments:         " foo's leading comment\n comment2",
+							TrailingComments:        " foo's trailing comment\n foo's definition ends",
 						},
 					},
 				},
@@ -150,7 +190,12 @@ func TestUpdate(t *testing.T) {
 							{
 								Name: "bar",
 								Type: ast.TypeName{Name: "text"},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 21},
 							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
 					},
 				},
@@ -170,11 +215,18 @@ func TestUpdate(t *testing.T) {
 							{
 								Name: "bar",
 								Type: ast.TypeName{Name: "text"},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 21,
+								},
 							},
 							{
-								Name: "baz",
-								Type: ast.TypeName{Name: "bool"},
+								Name:           "baz",
+								Type:           ast.TypeName{Name: "bool"},
+								SourceLocation: nil,
 							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
 					},
 				},
@@ -194,7 +246,13 @@ func TestUpdate(t *testing.T) {
 							{
 								Name: "baz",
 								Type: ast.TypeName{Name: "text"},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 21,
+								},
 							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
 					},
 				},
@@ -214,7 +272,13 @@ func TestUpdate(t *testing.T) {
 							{
 								Name: "baz",
 								Type: ast.TypeName{Name: "text"},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 21,
+								},
 							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
 					},
 				},
@@ -234,6 +298,9 @@ func TestUpdate(t *testing.T) {
 								Name:      "bar",
 								Type:      ast.TypeName{Name: "text"},
 								IsNotNull: true,
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 21,
+								},
 							},
 						},
 						Indexes: []*catalog.Index{
@@ -245,9 +312,13 @@ func TestUpdate(t *testing.T) {
 										NullsOrdering: catalog.SortByNullsDefault,
 									},
 								},
-								IsUnique:  false,
-								IsPrimary: true,
+								IsUnique:       false,
+								IsPrimary:      true,
+								SourceLocation: nil,
 							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
 					},
 				},
@@ -272,16 +343,18 @@ func TestUpdate(t *testing.T) {
 								Name:      "name1",
 								Type:      ast.TypeName{Name: "text"},
 								IsNotNull: true,
-								AssociatedComments: []*catalog.CommentGroup{
-									{Comments: []string{"-- name1"}, Type: catalog.TrailingComment},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 2, StartColumn: 4,
+									TrailingComments: " name1",
 								},
 							},
 							{
 								Name:      "name2",
 								Type:      ast.TypeName{Name: "text"},
 								IsNotNull: true,
-								AssociatedComments: []*catalog.CommentGroup{
-									{Comments: []string{"-- name2"}, Type: catalog.TrailingComment},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 3, StartColumn: 4,
+									TrailingComments: " name2",
 								},
 							},
 						},
@@ -301,8 +374,9 @@ func TestUpdate(t *testing.T) {
 								},
 								IsUnique:  false,
 								IsPrimary: true,
-								AssociatedComments: []*catalog.CommentGroup{
-									{Comments: []string{"-- primary key comment"}, Type: catalog.TrailingComment},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 4, StartColumn: 4,
+									TrailingComments: " primary key comment",
 								},
 							},
 							{
@@ -315,10 +389,14 @@ func TestUpdate(t *testing.T) {
 								},
 								IsUnique:  true,
 								IsPrimary: false,
-								AssociatedComments: []*catalog.CommentGroup{
-									{Comments: []string{"-- unique key comment"}, Type: catalog.TrailingComment},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 5, StartColumn: 4,
+									TrailingComments: " unique key comment",
 								},
 							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
 					},
 				},
@@ -341,21 +419,24 @@ func TestUpdate(t *testing.T) {
 								Name:      "name1",
 								Type:      ast.TypeName{Name: "text"},
 								IsNotNull: true,
-								AssociatedComments: []*catalog.CommentGroup{
-									{Comments: []string{"-- name1's comment"}, Type: catalog.TrailingComment},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 2, StartColumn: 4,
+									TrailingComments: " name1's comment",
 								},
 							},
 							{
 								Name:      "name2",
 								Type:      ast.TypeName{Name: "text"},
 								IsNotNull: true,
-								AssociatedComments: []*catalog.CommentGroup{
-									{Comments: []string{"-- name2's comment"}, Type: catalog.TrailingComment},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 3, StartColumn: 4,
+									TrailingComments: " name2's comment",
 								},
 							},
 						},
-						AssociatedComments: []*catalog.CommentGroup{
-							{Comments: []string{"-- foo's comment"}, Type: catalog.TrailingComment},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
+							TrailingComments: " foo's comment",
 						},
 					},
 				},
@@ -376,6 +457,9 @@ func TestUpdate(t *testing.T) {
 							{
 								Name: "bar",
 								Type: ast.TypeName{Name: "text"},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 21,
+								},
 							},
 						},
 						Indexes: []*catalog.Index{
@@ -389,21 +473,15 @@ func TestUpdate(t *testing.T) {
 								},
 								IsUnique:  false,
 								IsPrimary: false,
-								AssociatedComments: []*catalog.CommentGroup{
-									{
-										Comments: []string{
-											"-- foo's index leading comment",
-										},
-										Type: catalog.LeadingComment,
-									},
-									{
-										Comments: []string{
-											"-- foo's index trailing comment",
-										},
-										Type: catalog.TrailingComment,
-									},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 3, StartColumn: 3,
+									LeadingComments:  " foo's index leading comment",
+									TrailingComments: " foo's index trailing comment",
 								},
 							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
 					},
 				},
@@ -422,6 +500,9 @@ func TestUpdate(t *testing.T) {
 							{
 								Name: "bar",
 								Type: ast.TypeName{Name: "text"},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 21,
+								},
 							},
 						},
 						Indexes: []*catalog.Index{
@@ -433,9 +514,13 @@ func TestUpdate(t *testing.T) {
 										NullsOrdering: catalog.SortByNullsDefault,
 									},
 								},
-								IsUnique:  true,
-								IsPrimary: false,
+								IsUnique:       true,
+								IsPrimary:      false,
+								SourceLocation: nil,
 							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
 					},
 				},
@@ -454,10 +539,19 @@ func TestUpdate(t *testing.T) {
 						EnumVals: []*catalog.EnumValue{
 							{
 								Val: "xx",
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 28,
+								},
 							},
 							{
 								Val: "yy",
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 34,
+								},
 							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
 					},
 				},
@@ -479,19 +573,22 @@ func TestUpdate(t *testing.T) {
 						EnumVals: []*catalog.EnumValue{
 							{
 								Val: "xx",
-								AssociatedComments: []*catalog.CommentGroup{
-									{Comments: []string{"-- xx's comment"}, Type: catalog.TrailingComment},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 2, StartColumn: 4,
+									TrailingComments: " xx's comment",
 								},
 							},
 							{
 								Val: "yy",
-								AssociatedComments: []*catalog.CommentGroup{
-									{Comments: []string{"-- yy's comment"}, Type: catalog.TrailingComment},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 3, StartColumn: 4,
+									TrailingComments: " yy's comment",
 								},
 							},
 						},
-						AssociatedComments: []*catalog.CommentGroup{
-							{Comments: []string{"-- foo's comment"}, Type: catalog.TrailingComment},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
+							TrailingComments: " foo's comment",
 						},
 					},
 				},
@@ -516,19 +613,22 @@ func TestUpdate(t *testing.T) {
 						EnumVals: []*catalog.EnumValue{
 							{
 								Val: "xx",
-								AssociatedComments: []*catalog.CommentGroup{
-									{Comments: []string{"-- xx's comment"}, Type: catalog.LeadingComment},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 4, StartColumn: 4,
+									LeadingComments: " xx's comment",
 								},
 							},
 							{
 								Val: "yy",
-								AssociatedComments: []*catalog.CommentGroup{
-									{Comments: []string{"-- yy's comment"}, Type: catalog.LeadingComment},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 6, StartColumn: 4,
+									LeadingComments: " yy's comment",
 								},
 							},
 						},
-						AssociatedComments: []*catalog.CommentGroup{
-							{Comments: []string{"-- foo's comment"}, Type: catalog.LeadingComment},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 2, StartColumn: 3,
+							LeadingComments: " foo's comment",
 						},
 					},
 				},
@@ -537,7 +637,7 @@ func TestUpdate(t *testing.T) {
 	} {
 		test := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			stmts, err := p.Parse(strings.NewReader(test.stmt))
+			stmts, err := p.Parse(strings.NewReader(test.stmt), "test")
 			if err != nil {
 				t.Log(test.stmt)
 				t.Fatal(err)
@@ -704,7 +804,7 @@ func TestUpdateErrors(t *testing.T) {
 	} {
 		test := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			stmts, err := p.Parse(strings.NewReader(test.stmt))
+			stmts, err := p.Parse(strings.NewReader(test.stmt), "test")
 			if err != nil {
 				t.Log(test.stmt)
 				t.Fatal(err)
