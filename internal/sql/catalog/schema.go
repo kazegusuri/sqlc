@@ -15,7 +15,8 @@ type Schema struct {
 	Types  []Type
 	Funcs  []*Function
 
-	Comment string
+	Comment        string
+	SourceLocation *SourceLocation
 }
 
 func (s *Schema) getFunc(rel *ast.FuncName, tns []*ast.TypeName) (*Function, int, error) {
@@ -109,7 +110,10 @@ func (c *Catalog) createSchema(stmt *ast.CreateSchemaStmt) error {
 			return sqlerr.SchemaExists(*stmt.Name)
 		}
 	}
-	c.Schemas = append(c.Schemas, &Schema{Name: *stmt.Name})
+	c.Schemas = append(c.Schemas, &Schema{
+		Name:           *stmt.Name,
+		SourceLocation: convertSourceLocation(stmt.SourceLocation),
+	})
 	return nil
 }
 

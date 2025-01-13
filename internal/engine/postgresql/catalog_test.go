@@ -27,6 +27,19 @@ func TestUpdate(t *testing.T) {
 	}{
 		{
 			`
+			-- public schema
+			CREATE SCHEMA IF NOT EXISTS public;
+			`,
+			&catalog.Schema{
+				Name: "public",
+				SourceLocation: &catalog.SourceLocation{
+					Filename: "test", StartLine: 2, StartColumn: 3,
+					LeadingComments: " public schema",
+				},
+			},
+		},
+		{
+			`
 			CREATE TABLE foo (bar text);
 			`,
 			&catalog.Schema{

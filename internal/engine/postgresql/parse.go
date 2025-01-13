@@ -594,10 +594,16 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 		return stmt, nil
 
 	case *nodes.Node_CreateSchemaStmt:
+		var location *ast.SourceLocation
+		if pos := dispatcher.FindLocationInStatement(raw, "CREATE SCHEMA"); pos >= 0 {
+			location = dispatcher.SourceLocationWithComments(pos)
+		}
+
 		n := inner.CreateSchemaStmt
 		return &ast.CreateSchemaStmt{
-			Name:        makeString(n.Schemaname),
-			IfNotExists: n.IfNotExists,
+			Name:           makeString(n.Schemaname),
+			IfNotExists:    n.IfNotExists,
+			SourceLocation: location,
 		}, nil
 
 	case *nodes.Node_DropStmt:

@@ -56,6 +56,7 @@ message Schema {
   repeated Table tables = 3;
   repeated Enum enums = 4;
   repeated CompositeType composite_types = 5;
+  SourceLocation source_location = 6;
 }
 
 message CompositeType {

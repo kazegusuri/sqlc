@@ -155,6 +155,7 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 			Tables:         tables,
 			Enums:          enums,
 			CompositeTypes: cts,
+			SourceLocation: pluginSourceLocation(s.SourceLocation),
 		})
 	}
 	return &plugin.Catalog{

@@ -160,13 +160,13 @@
             ],
             "source_location": {
               "filename": "/home/kazegusuri/go/src/github.com/sqlc-dev/sqlc/internal/endtoend/testdata/codegen_json/postgresql/schema.sql",
-              "start_line": 0,
-              "start_column": 10,
+              "start_line": 1,
+              "start_column": 0,
               "end_line": 0,
               "end_column": 0,
               "LeadingDetachedComments": [],
-              "LeadingComments": "",
-              "TrailingComments": " author"
+              "LeadingComments": " author",
+              "TrailingComments": ""
             }
           }
         ],
@@ -208,8 +208,8 @@
             ],
             "source_location": {
               "filename": "/home/kazegusuri/go/src/github.com/sqlc-dev/sqlc/internal/endtoend/testdata/codegen_json/postgresql/schema.sql",
-              "start_line": 7,
-              "start_column": 10,
+              "start_line": 8,
+              "start_column": 0,
               "end_line": 0,
               "end_column": 0,
               "LeadingDetachedComments": [],
@@ -218,14 +218,16 @@
             }
           }
         ],
-        "composite_types": []
+        "composite_types": [],
+        "source_location": null
       },
       {
         "comment": "",
         "name": "pg_temp",
         "tables": [],
         "enums": [],
-        "composite_types": []
+        "composite_types": [],
+        "source_location": null
       },
       {
         "comment": "",
@@ -47585,7 +47587,8 @@
           }
         ],
         "enums": [],
-        "composite_types": []
+        "composite_types": [],
+        "source_location": null
       },
       {
         "comment": "",
@@ -67888,7 +67891,8 @@
           }
         ],
         "enums": [],
-        "composite_types": []
+        "composite_types": [],
+        "source_location": null
       }
     ]
   },
