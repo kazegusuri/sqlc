@@ -50,7 +50,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name: "bar",
-								Type: ast.TypeName{Name: "text"},
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 1, StartColumn: 21,
 								},
@@ -73,7 +73,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name: "foo",
-								Type: ast.TypeName{Name: "text"},
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 0, StartColumn: 18,
 								},
@@ -88,7 +88,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name: "bar",
-								Type: ast.TypeName{Name: "text"},
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 1, StartColumn: 18,
 								},
@@ -113,7 +113,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name: "bar",
-								Type: ast.TypeName{Name: "text"},
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 1, StartColumn: 21,
 								},
@@ -140,7 +140,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name: "bar",
-								Type: ast.TypeName{Name: "text"},
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 2, StartColumn: 21,
 								},
@@ -173,7 +173,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name: "bar",
-								Type: ast.TypeName{Name: "text"},
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 6, StartColumn: 21,
 								},
@@ -202,7 +202,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name: "bar",
-								Type: ast.TypeName{Name: "text"},
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 1, StartColumn: 21},
 							},
@@ -227,7 +227,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name: "bar",
-								Type: ast.TypeName{Name: "text"},
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 1, StartColumn: 21,
 								},
@@ -258,7 +258,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name: "baz",
-								Type: ast.TypeName{Name: "text"},
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 1, StartColumn: 21,
 								},
@@ -284,7 +284,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name: "baz",
-								Type: ast.TypeName{Name: "text"},
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 1, StartColumn: 21,
 								},
@@ -309,7 +309,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name:      "bar",
-								Type:      ast.TypeName{Name: "text"},
+								Type:      ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								IsNotNull: true,
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 1, StartColumn: 21,
@@ -354,7 +354,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name:      "name1",
-								Type:      ast.TypeName{Name: "text"},
+								Type:      ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								IsNotNull: true,
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 2, StartColumn: 4,
@@ -363,7 +363,7 @@ func TestUpdate(t *testing.T) {
 							},
 							{
 								Name:      "name2",
-								Type:      ast.TypeName{Name: "text"},
+								Type:      ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								IsNotNull: true,
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 3, StartColumn: 4,
@@ -430,7 +430,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name:      "name1",
-								Type:      ast.TypeName{Name: "text"},
+								Type:      ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								IsNotNull: true,
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 2, StartColumn: 4,
@@ -439,7 +439,7 @@ func TestUpdate(t *testing.T) {
 							},
 							{
 								Name:      "name2",
-								Type:      ast.TypeName{Name: "text"},
+								Type:      ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								IsNotNull: true,
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 3, StartColumn: 4,
@@ -469,7 +469,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name: "bar",
-								Type: ast.TypeName{Name: "text"},
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 1, StartColumn: 21,
 								},
@@ -512,7 +512,7 @@ func TestUpdate(t *testing.T) {
 						Columns: []*catalog.Column{
 							{
 								Name: "bar",
-								Type: ast.TypeName{Name: "text"},
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 1, StartColumn: 21,
 								},
@@ -647,6 +647,74 @@ func TestUpdate(t *testing.T) {
 				},
 			},
 		},
+		{
+			`
+			CREATE TABLE foo (
+				geo1 geometry(foo.bar.baz, bar),
+				geo2 geometry('foo', 123, 1.234, true, b'10001')
+			);
+			`,
+			&catalog.Schema{
+				Name: "main",
+				Tables: []*catalog.Table{
+					{
+						Rel: &ast.TableName{Name: "foo"},
+						Columns: []*catalog.Column{
+							{
+								Name: "geo1",
+								Type: ast.TypeName{
+									Name: "geometry",
+									Typmods: &ast.List{
+										Items: []ast.Node{
+											&ast.ColumnRef{
+												Fields: &ast.List{
+													Items: []ast.Node{
+														&ast.String{Str: "foo"},
+														&ast.String{Str: "bar"},
+														&ast.String{Str: "baz"},
+													},
+												},
+												Location: 41,
+											},
+											&ast.ColumnRef{
+												Fields: &ast.List{
+													Items: []ast.Node{&ast.String{Str: "bar"}},
+												},
+												Location: 54,
+											},
+										},
+									},
+								},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 2, StartColumn: 4,
+								},
+							},
+							{
+								Name: "geo2",
+								Type: ast.TypeName{
+									Name: "geometry",
+									Typmods: &ast.List{
+										Items: []ast.Node{
+											&ast.A_Const{Val: &ast.String{Str: "foo"}, Location: 78},
+											&ast.A_Const{Val: &ast.Integer{Ival: 123}, Location: 85},
+											&ast.A_Const{Val: &ast.Float{Str: "1.234"}, Location: 90},
+											&ast.A_Const{Val: &ast.Boolean{Boolval: true}, Location: 97},
+											&ast.A_Const{Val: &ast.BitString{Str: "b10001"}, Location: 103},
+										},
+									},
+								},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 3, StartColumn: 4,
+								},
+							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
+						},
+					},
+				},
+			},
+		},
 	} {
 		test := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -677,7 +745,11 @@ func TestUpdate(t *testing.T) {
 				}
 			}
 
-			if diff := cmp.Diff(e, c, cmpopts.EquateEmpty(), cmpopts.IgnoreUnexported(catalog.Column{})); diff != "" {
+			if diff := cmp.Diff(e, c,
+				cmpopts.EquateEmpty(),
+				cmpopts.IgnoreUnexported(catalog.Column{}),
+				cmpopts.IgnoreFields(ast.TypeName{}, "Names", "TypeOid", "Setof", "PctType", "Typemod", "ArrayBounds", "Location"),
+			); diff != "" {
 				t.Log(test.stmt)
 				t.Errorf("catalog mismatch:\n%s", diff)
 			}

@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/sqlc-dev/sqlc/internal/compiler"
 	"github.com/sqlc-dev/sqlc/internal/config"
 	"github.com/sqlc-dev/sqlc/internal/config/convert"
 	"github.com/sqlc-dev/sqlc/internal/info"
 	"github.com/sqlc-dev/sqlc/internal/plugin"
+	"github.com/sqlc-dev/sqlc/internal/sql/ast"
 	"github.com/sqlc-dev/sqlc/internal/sql/catalog"
 )
 
@@ -116,6 +120,7 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 						Name:    t.Rel.Name,
 					},
 					SourceLocation: pluginSourceLocation(c.SourceLocation),
+					TypeMods:       pluginTypeMods(c.Type.Typmods),
 				})
 			}
 			var indexes []*plugin.Index
@@ -180,6 +185,41 @@ func pluginSourceLocation(loc *catalog.SourceLocation) *plugin.SourceLocation {
 		LeadingComments:         loc.LeadingComments,
 		TrailingComments:        loc.TrailingComments,
 	}
+}
+
+func pluginTypeMods(typmods *ast.List) []string {
+	if typmods == nil {
+		return nil
+	}
+
+	var ss []string
+	for _, item := range typmods.Items {
+		switch n := item.(type) {
+		case *ast.ColumnRef:
+			var fields []string
+			for _, field := range n.Fields.Items {
+				switch v := field.(type) {
+				case *ast.String:
+					fields = append(fields, v.Str)
+				}
+			}
+			ss = append(ss, strings.Join(fields, "."))
+		case *ast.A_Const:
+			switch v := n.Val.(type) {
+			case *ast.Integer:
+				ss = append(ss, fmt.Sprintf("%d", v.Ival))
+			case *ast.Float:
+				ss = append(ss, v.Str)
+			case *ast.Boolean:
+				ss = append(ss, fmt.Sprintf("%v", v.Boolval))
+			case *ast.String:
+				ss = append(ss, fmt.Sprintf("'%s'", v.Str))
+			case *ast.BitString:
+				ss = append(ss, v.Str)
+			}
+		}
+	}
+	return ss
 }
 
 func pluginQueries(r *compiler.Result) []*plugin.Query {

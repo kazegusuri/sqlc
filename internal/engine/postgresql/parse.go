@@ -500,10 +500,20 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 					}
 				}
 
+				typeName := convertTypeName(item.ColumnDef.TypeName)
+				if typeName == nil {
+					typeName = rel.TypeName()
+				} else {
+					relTypeName := rel.TypeName()
+					typeName.Catalog = relTypeName.Catalog
+					typeName.Schema = relTypeName.Schema
+					typeName.Name = relTypeName.Name
+				}
+
 				_, isPrimary := primaryKeyNames[item.ColumnDef.Colname]
 				create.Cols = append(create.Cols, &ast.ColumnDef{
 					Colname:        item.ColumnDef.Colname,
-					TypeName:       rel.TypeName(),
+					TypeName:       typeName,
 					IsNotNull:      isNotNull(item.ColumnDef) || isPrimary,
 					IsArray:        isArray(item.ColumnDef.TypeName),
 					ArrayDims:      len(item.ColumnDef.TypeName.ArrayBounds),

@@ -321,7 +321,7 @@ func (c *Catalog) alterTypeSetSchema(stmt *ast.AlterTypeSetSchemaStmt) error {
 	for _, schema := range c.Schemas {
 		for _, table := range schema.Tables {
 			for _, column := range table.Columns {
-				if column.Type == oldType {
+				if sameType(&column.Type, &oldType) {
 					column.Type.Schema = *stmt.NewSchema
 				}
 			}
@@ -404,7 +404,7 @@ func (c *Catalog) renameType(stmt *ast.RenameTypeStmt) error {
 	for _, schema := range c.Schemas {
 		for _, table := range schema.Tables {
 			for _, column := range table.Columns {
-				if column.Type == *stmt.Type {
+				if sameType(&column.Type, stmt.Type) {
 					column.Type.Name = newName
 				}
 			}

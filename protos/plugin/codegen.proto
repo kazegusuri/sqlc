@@ -141,6 +141,7 @@ message Column {
   int32 array_dims = 17;
 
   SourceLocation source_location = 18;
+  repeated string type_mods = 19;
 }
 
 message SourceLocation {
