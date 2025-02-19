@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strings"
 
-	nodes "github.com/pganalyze/pg_query_go/v5"
+	nodes "github.com/pganalyze/pg_query_go/v6"
 	"github.com/sqlc-dev/sqlc/internal/source"
 	"github.com/sqlc-dev/sqlc/internal/sql/ast"
 )
