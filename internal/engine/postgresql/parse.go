@@ -484,6 +484,7 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 					return nil, err
 				}
 
+				var isGenerated bool
 				for _, con := range item.ColumnDef.Constraints {
 					if nodeConstraint, ok := con.Node.(*nodes.Node_Constraint); ok {
 						constraint := &ast.CreateTableConstraint{
@@ -495,6 +496,8 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 							constraint.Primary = true
 						case nodes.ConstrType_CONSTR_UNIQUE:
 							constraint.Unique = true
+						case nodes.ConstrType_CONSTR_GENERATED:
+							isGenerated = true
 						}
 						constraints = append(constraints, constraint)
 					}
@@ -518,6 +521,7 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 					IsArray:        isArray(item.ColumnDef.TypeName),
 					ArrayDims:      len(item.ColumnDef.TypeName.ArrayBounds),
 					PrimaryKey:     isPrimary,
+					IsGenerated:    isGenerated,
 					SourceLocation: dispatcher.SourceLocationWithComments(item.ColumnDef.Location),
 				})
 			}

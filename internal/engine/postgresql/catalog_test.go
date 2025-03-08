@@ -715,6 +715,44 @@ func TestUpdate(t *testing.T) {
 				},
 			},
 		},
+		{
+			`
+			CREATE TABLE foo (
+				status text NOT NULL,
+				active boolean NOT NULL GENERATED ALWAYS AS (status = 'active') STORED
+			);
+			`,
+			&catalog.Schema{
+				Name: "main",
+				Tables: []*catalog.Table{
+					{
+						Rel: &ast.TableName{Name: "foo"},
+						Columns: []*catalog.Column{
+							{
+								Name:      "status",
+								Type:      ast.TypeName{Name: "text", Typmods: &ast.List{}},
+								IsNotNull: true,
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 2, StartColumn: 4,
+								},
+							},
+							{
+								Name:        "active",
+								Type:        ast.TypeName{Schema: "pg_catalog", Name: "bool", Typmods: &ast.List{}},
+								IsNotNull:   true,
+								IsGenerated: true,
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 3, StartColumn: 4,
+								},
+							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
+						},
+					},
+				},
+			},
+		},
 	} {
 		test := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {

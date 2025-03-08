@@ -17,6 +17,10 @@ type CommentsDispatcher struct {
 	locations *SourceLocations
 }
 
+func (d *CommentsDispatcher) Contents(loc, len int) string {
+	return d.contents[loc : loc+len]
+}
+
 func (d *CommentsDispatcher) FindLocationInStatement(stmt *nodes.RawStmt, str string) int32 {
 	stmtContents := d.contents[stmt.StmtLocation : stmt.StmtLocation+stmt.StmtLen]
 	index := strings.Index(stmtContents, str)

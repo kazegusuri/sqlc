@@ -126,6 +126,7 @@ type Column struct {
 	Type           ast.TypeName
 	IsNotNull      bool
 	IsUnsigned     bool
+	IsGenerated    bool
 	IsArray        bool
 	ArrayDims      int
 	Comment        string
@@ -364,6 +365,7 @@ func (c *Catalog) defineColumn(table *ast.TableName, col *ast.ColumnDef) (*Colum
 		Type:           *col.TypeName,
 		IsNotNull:      col.IsNotNull,
 		IsUnsigned:     col.IsUnsigned,
+		IsGenerated:    col.IsGenerated,
 		IsArray:        col.IsArray,
 		ArrayDims:      col.ArrayDims,
 		Comment:        col.Comment,
