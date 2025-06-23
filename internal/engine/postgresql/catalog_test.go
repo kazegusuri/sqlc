@@ -502,6 +502,74 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			`
+			CREATE TABLE foo (bar text, state text);
+			CREATE INDEX ON foo (bar) WHERE bar IS NOT NULL;
+			CREATE INDEX ON foo (bar) wHeRe state In ('active', 'inactive') AND bar IS NULL;
+			`,
+			&catalog.Schema{
+				Name: "main",
+				Tables: []*catalog.Table{
+					{
+						Rel: &ast.TableName{Name: "foo"},
+						Columns: []*catalog.Column{
+							{
+								Name: "bar",
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 21,
+								},
+							},
+							{
+								Name: "state",
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 31,
+								},
+							},
+						},
+						Indexes: []*catalog.Index{
+							{
+								Elems: []*catalog.IndexElem{
+									{
+										Name:          "bar",
+										Ordering:      catalog.SortByDirDefault,
+										NullsOrdering: catalog.SortByNullsDefault,
+									},
+								},
+								IsUnique:    false,
+								IsPrimary:   false,
+								IsPartial:   true,
+								WhereClause: "bar IS NOT NULL",
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 2, StartColumn: 3,
+								},
+							},
+							{
+								Elems: []*catalog.IndexElem{
+									{
+										Name:          "bar",
+										Ordering:      catalog.SortByDirDefault,
+										NullsOrdering: catalog.SortByNullsDefault,
+									},
+								},
+								IsUnique:    false,
+								IsPrimary:   false,
+								IsPartial:   true,
+								WhereClause: "state IN ('active', 'inactive') AND bar IS NULL",
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 3, StartColumn: 3,
+								},
+							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
+						},
+					},
+				},
+			},
+		},
+		{
+			`
 			CREATE TABLE foo (bar text UNIQUE);
 			`,
 			&catalog.Schema{

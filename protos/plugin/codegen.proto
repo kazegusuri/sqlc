@@ -91,6 +91,8 @@ message Index {
   bool is_unique = 3;
   bool is_primary = 4;
   SourceLocation source_location = 5;
+  bool is_partial = 6;
+  string where_clause = 7;
 }
 
 message IndexElem {

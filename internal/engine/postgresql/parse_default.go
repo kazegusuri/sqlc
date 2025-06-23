@@ -9,5 +9,6 @@ import (
 
 var ParseScan = nodes.Scan
 var Parse = nodes.Parse
+var Deparse = nodes.Deparse
 var DeparseFromProtobuf = parser.DeparseFromProtobuf
 var Fingerprint = nodes.Fingerprint

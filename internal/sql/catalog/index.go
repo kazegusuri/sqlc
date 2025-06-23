@@ -10,6 +10,8 @@ type Index struct {
 	IsUnique       bool
 	IsPrimary      bool
 	SourceLocation *SourceLocation
+	IsPartial      bool
+	WhereClause    string
 }
 
 func (c *Catalog) createIndex(stmt *ast.IndexStmt) error {
@@ -39,10 +41,19 @@ func (c *Catalog) createIndex(stmt *ast.IndexStmt) error {
 		return err
 	}
 
+	var isPartial bool
+	var whereClause string
+	if stmt.WhereClauseStr != nil {
+		isPartial = true
+		whereClause = *stmt.WhereClauseStr
+	}
+
 	idx := &Index{
 		Name:           name,
 		IsUnique:       stmt.Unique,
 		IsPrimary:      stmt.Primary,
+		IsPartial:      isPartial,
+		WhereClause:    whereClause,
 		SourceLocation: convertSourceLocation(stmt.SourceLocation),
 	}
 

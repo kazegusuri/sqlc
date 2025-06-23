@@ -143,6 +143,8 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 					Elems:          elems,
 					IsUnique:       idx.IsUnique,
 					IsPrimary:      idx.IsPrimary,
+					IsPartial:      idx.IsPartial,
+					WhereClause:    idx.WhereClause,
 					SourceLocation: pluginSourceLocation(idx.SourceLocation),
 				})
 			}

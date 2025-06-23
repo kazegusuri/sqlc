@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	"fmt"
+	"strings"
 
 	pg "github.com/pganalyze/pg_query_go/v6"
 
@@ -1740,6 +1741,36 @@ func convertIndexStmt(n *pg.IndexStmt) *ast.IndexStmt {
 	if n == nil {
 		return nil
 	}
+
+	var whereClauseStr *string
+	if n.WhereClause != nil {
+		// WhereClause は ast.Format が完全にサポートされていないのと
+		// Deparse で直接指定するとエラーになるため、 SELECT statement を使って変換する。
+		stmt, err := Deparse(&pg.ParseResult{
+			Stmts: []*pg.RawStmt{
+				{
+					Stmt: &pg.Node{
+						Node: &pg.Node_SelectStmt{
+							SelectStmt: &pg.SelectStmt{
+								WhereClause: n.WhereClause,
+							},
+						},
+					},
+				},
+			},
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to deparse from index statement: %v", err))
+		}
+
+		after, ok := strings.CutPrefix(stmt, "SELECT WHERE ")
+		if !ok {
+			panic(fmt.Sprintf("expected deparse result from index statement: %s", stmt))
+		}
+
+		whereClauseStr = &after
+	}
+
 	return &ast.IndexStmt{
 		Idxname:        makeString(n.Idxname),
 		Relation:       convertRangeVar(n.Relation),
@@ -1748,6 +1779,7 @@ func convertIndexStmt(n *pg.IndexStmt) *ast.IndexStmt {
 		IndexParams:    convertSlice(n.IndexParams),
 		Options:        convertSlice(n.Options),
 		WhereClause:    convertNode(n.WhereClause),
+		WhereClauseStr: whereClauseStr,
 		ExcludeOpNames: convertSlice(n.ExcludeOpNames),
 		Idxcomment:     makeString(n.Idxcomment),
 		IndexOid:       ast.Oid(n.IndexOid),

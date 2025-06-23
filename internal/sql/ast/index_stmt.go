@@ -8,6 +8,7 @@ type IndexStmt struct {
 	IndexParams    *List
 	Options        *List
 	WhereClause    Node
+	WhereClauseStr *string
 	ExcludeOpNames *List
 	Idxcomment     *string
 	IndexOid       Oid

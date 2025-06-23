@@ -172,7 +172,9 @@
                 ],
                 "is_unique": false,
                 "is_primary": true,
-                "source_location": null
+                "source_location": null,
+                "is_partial": false,
+                "where_clause": ""
               },
               {
                 "name": "",
@@ -194,7 +196,9 @@
                   "LeadingDetachedComments": [],
                   "LeadingComments": "",
                   "TrailingComments": ""
-                }
+                },
+                "is_partial": false,
+                "where_clause": ""
               },
               {
                 "name": "authors_bio_idx",
@@ -216,7 +220,9 @@
                   "LeadingDetachedComments": [],
                   "LeadingComments": "",
                   "TrailingComments": ""
-                }
+                },
+                "is_partial": false,
+                "where_clause": ""
               }
             ],
             "source_location": {
