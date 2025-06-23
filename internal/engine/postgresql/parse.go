@@ -485,10 +485,22 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 				}
 
 				var isGenerated bool
+				var hasDefault bool
+				var generateExpr string
+				var defaultExpr string
 				for _, con := range item.ColumnDef.Constraints {
 					if nodeConstraint, ok := con.Node.(*nodes.Node_Constraint); ok {
 						constraint := &ast.CreateTableConstraint{
 							Keys: []string{item.ColumnDef.Colname},
+						}
+
+						var rawExprStr string
+						if nodeConstraint.Constraint.RawExpr != nil {
+							n, err := convert(nodeConstraint.Constraint.RawExpr)
+							if err != nil {
+								return nil, fmt.Errorf("failed to convert RawExpr constraint: %w", err)
+							}
+							rawExprStr = ast.Format(n)
 						}
 
 						switch nodeConstraint.Constraint.Contype {
@@ -498,6 +510,10 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 							constraint.Unique = true
 						case nodes.ConstrType_CONSTR_GENERATED:
 							isGenerated = true
+							generateExpr = rawExprStr
+						case nodes.ConstrType_CONSTR_DEFAULT:
+							hasDefault = true
+							defaultExpr = rawExprStr
 						}
 						constraints = append(constraints, constraint)
 					}
@@ -522,6 +538,9 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 					ArrayDims:      len(item.ColumnDef.TypeName.ArrayBounds),
 					PrimaryKey:     isPrimary,
 					IsGenerated:    isGenerated,
+					HasDefault:     hasDefault,
+					GenerateExpr:   generateExpr,
+					DefaultExpr:    defaultExpr,
 					SourceLocation: dispatcher.SourceLocationWithComments(item.ColumnDef.Location),
 				})
 			}

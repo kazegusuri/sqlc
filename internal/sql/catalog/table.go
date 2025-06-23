@@ -128,9 +128,12 @@ type Column struct {
 	IsUnsigned     bool
 	IsGenerated    bool
 	IsArray        bool
+	HasDefault     bool
 	ArrayDims      int
 	Comment        string
 	Length         *int
+	GenerateExpr   string
+	DefaultExpr    string
 	SourceLocation *SourceLocation
 
 	linkedType bool
@@ -361,15 +364,19 @@ func (c *Catalog) createTable(stmt *ast.CreateTableStmt) error {
 
 func (c *Catalog) defineColumn(table *ast.TableName, col *ast.ColumnDef) (*Column, error) {
 	tc := &Column{
-		Name:           col.Colname,
-		Type:           *col.TypeName,
-		IsNotNull:      col.IsNotNull,
-		IsUnsigned:     col.IsUnsigned,
-		IsGenerated:    col.IsGenerated,
-		IsArray:        col.IsArray,
-		ArrayDims:      col.ArrayDims,
-		Comment:        col.Comment,
-		Length:         col.Length,
+		Name:         col.Colname,
+		Type:         *col.TypeName,
+		IsNotNull:    col.IsNotNull,
+		IsUnsigned:   col.IsUnsigned,
+		IsGenerated:  col.IsGenerated,
+		HasDefault:   col.HasDefault,
+		IsArray:      col.IsArray,
+		GenerateExpr: col.GenerateExpr,
+		DefaultExpr:  col.DefaultExpr,
+		ArrayDims:    col.ArrayDims,
+		Comment:      col.Comment,
+		Length:       col.Length,
+
 		SourceLocation: convertSourceLocation(col.SourceLocation),
 	}
 	if col.Vals != nil {

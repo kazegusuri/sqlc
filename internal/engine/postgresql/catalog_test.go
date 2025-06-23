@@ -737,12 +737,63 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 							{
-								Name:        "active",
-								Type:        ast.TypeName{Schema: "pg_catalog", Name: "bool", Typmods: &ast.List{}},
-								IsNotNull:   true,
-								IsGenerated: true,
+								Name:         "active",
+								Type:         ast.TypeName{Schema: "pg_catalog", Name: "bool", Typmods: &ast.List{}},
+								IsNotNull:    true,
+								IsGenerated:  true,
+								GenerateExpr: `status = 'active'`,
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 3, StartColumn: 4,
+								},
+							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
+						},
+					},
+				},
+			},
+		},
+		{
+			`
+			CREATE TABLE foo (
+				status text NOT NULL,
+				str text NOT NULL DEFAULT 'foo',
+				num int4 NOT NULL DEFAULT 3
+			);
+			`,
+			&catalog.Schema{
+				Name: "main",
+				Tables: []*catalog.Table{
+					{
+						Rel: &ast.TableName{Name: "foo"},
+						Columns: []*catalog.Column{
+							{
+								Name:      "status",
+								Type:      ast.TypeName{Name: "text", Typmods: &ast.List{}},
+								IsNotNull: true,
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 2, StartColumn: 4,
+								},
+							},
+							{
+								Name:        "str",
+								Type:        ast.TypeName{Schema: "", Name: "text", Typmods: &ast.List{}},
+								IsNotNull:   true,
+								HasDefault:  true,
+								DefaultExpr: `'foo'`,
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 3, StartColumn: 4,
+								},
+							},
+							{
+								Name:        "num",
+								Type:        ast.TypeName{Schema: "", Name: "int4", Typmods: &ast.List{}},
+								IsNotNull:   true,
+								HasDefault:  true,
+								DefaultExpr: `3`,
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 4, StartColumn: 4,
 								},
 							},
 						},

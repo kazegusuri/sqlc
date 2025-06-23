@@ -1,16 +1,19 @@
 package ast
 
 type ColumnDef struct {
-	Colname     string
-	TypeName    *TypeName
-	IsNotNull   bool
-	IsUnsigned  bool
-	IsArray     bool
-	ArrayDims   int
-	Vals        *List
-	Length      *int
-	PrimaryKey  bool
-	IsGenerated bool
+	Colname      string
+	TypeName     *TypeName
+	IsNotNull    bool
+	IsUnsigned   bool
+	HasDefault   bool
+	IsArray      bool
+	ArrayDims    int
+	Vals         *List
+	Length       *int
+	PrimaryKey   bool
+	IsGenerated  bool
+	GenerateExpr string
+	DefaultExpr  string
 
 	SourceLocation *SourceLocation
 
