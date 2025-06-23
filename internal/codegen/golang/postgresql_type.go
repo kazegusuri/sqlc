@@ -165,7 +165,7 @@ func postgresType(req *plugin.GenerateRequest, options *opts.Options, col *plugi
 		}
 		return "sql.NullBool"
 
-	case "json":
+	case "json", "pg_catalog.json":
 		switch driver {
 		case opts.SQLDriverPGXV5:
 			return "[]byte"

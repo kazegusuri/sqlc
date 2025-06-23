@@ -281,6 +281,7 @@ func pluginQueryColumn(c *compiler.Column) *plugin.Column {
 			Schema:  c.Type.Schema,
 			Name:    c.Type.Name,
 		}
+		out.TypeMods = pluginTypeMods(c.Type.Typmods)
 	} else {
 		out.Type = &plugin.Identifier{
 			Name: c.DataType,
