@@ -17,7 +17,18 @@ type Table struct {
 	Columns        []*Column
 	Indexes        []*Index
 	Comment        string
+	Constraints    *TableConstraints
 	SourceLocation *SourceLocation
+}
+
+type TableConstraints struct {
+	ForeignKeys []*ForeginKeyConstraint
+}
+
+type ForeginKeyConstraint struct {
+	Rel        *ast.TableName
+	RelColumns []string
+	Columns    []string
 }
 
 func checkMissing(err error, missingOK bool) error {
@@ -356,6 +367,26 @@ func (c *Catalog) createTable(stmt *ast.CreateTableStmt) error {
 			IsPrimary:      constraint.Primary,
 			SourceLocation: convertSourceLocation(constraint.SourceLocation),
 		})
+	}
+
+	// define table constraints
+	var foreignKeys []*ForeginKeyConstraint
+	for _, constraint := range stmt.Constraints {
+		if !constraint.ForeignKey {
+			continue
+		}
+
+		foreignKeys = append(foreignKeys, &ForeginKeyConstraint{
+			Rel: &ast.TableName{
+				Name: constraint.RefTable,
+			},
+			RelColumns: constraint.RefColumns,
+			Columns:    constraint.Keys,
+		})
+	}
+
+	tbl.Constraints = &TableConstraints{
+		ForeignKeys: foreignKeys,
 	}
 
 	schema.Tables = append(schema.Tables, &tbl)

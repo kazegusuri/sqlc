@@ -34,9 +34,12 @@ func (n *CreateTableStmt) Format(buf *TrackedBuffer) {
 }
 
 type CreateTableConstraint struct {
-	Keys    []string
-	Primary bool
-	Unique  bool
+	Keys       []string
+	Primary    bool
+	Unique     bool
+	ForeignKey bool
+	RefTable   string
+	RefColumns []string
 
 	SourceLocation *SourceLocation
 }

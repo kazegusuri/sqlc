@@ -475,6 +475,16 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 					constraint.Primary = true
 				case nodes.ConstrType_CONSTR_UNIQUE:
 					constraint.Unique = true
+				case nodes.ConstrType_CONSTR_FOREIGN:
+					var reftable string
+					if item.Constraint.Pktable != nil {
+						reftable = item.Constraint.Pktable.Relname
+					}
+
+					constraint.ForeignKey = true
+					constraint.RefTable = reftable
+					constraint.RefColumns = stringSliceFromNodes(item.Constraint.PkAttrs)
+					constraint.Keys = stringSliceFromNodes(item.Constraint.FkAttrs)
 				}
 				constraints = append(constraints, constraint)
 
@@ -496,11 +506,7 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 
 						var rawExprStr string
 						if nodeConstraint.Constraint.RawExpr != nil {
-							n, err := convert(nodeConstraint.Constraint.RawExpr)
-							if err != nil {
-								return nil, fmt.Errorf("failed to convert RawExpr constraint: %w", err)
-							}
-							rawExprStr = ast.Format(n)
+							rawExprStr = ast.Format(convertNode(nodeConstraint.Constraint.RawExpr))
 						}
 
 						switch nodeConstraint.Constraint.Contype {
@@ -514,6 +520,23 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 						case nodes.ConstrType_CONSTR_DEFAULT:
 							hasDefault = true
 							defaultExpr = rawExprStr
+						case nodes.ConstrType_CONSTR_FOREIGN:
+							var reftable string
+							if nodeConstraint.Constraint.Pktable != nil {
+								reftable = nodeConstraint.Constraint.Pktable.Relname
+							}
+
+							var refcolumns []string
+							attrs := nodeConstraint.Constraint.PkAttrs
+							if len(attrs) == 0 {
+								refcolumns = []string{item.ColumnDef.Colname}
+							} else {
+								refcolumns = stringSliceFromNodes(attrs)
+							}
+
+							constraint.ForeignKey = true
+							constraint.RefTable = reftable
+							constraint.RefColumns = refcolumns
 						}
 						constraints = append(constraints, constraint)
 					}

@@ -27,6 +27,110 @@ func TestUpdate(t *testing.T) {
 	}{
 		{
 			`
+			CREATE TABLE foo (bar text);
+			CREATE TABLE external1 (bar text REFERENCES foo);
+			CREATE TABLE external2 (baz text REFERENCES foo (bar));
+			CREATE TABLE external3 (
+				qux text,
+				FOREIGN KEY (qux) REFERENCES foo (bar)
+			);
+			`,
+			&catalog.Schema{
+				Name: "main",
+				Tables: []*catalog.Table{
+					{
+						Rel: &ast.TableName{Name: "foo"},
+						Columns: []*catalog.Column{
+							{
+								Name: "bar",
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 1, StartColumn: 21,
+								},
+							},
+						},
+						Constraints: &catalog.TableConstraints{},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 1, StartColumn: 3,
+						},
+					},
+					{
+						Rel: &ast.TableName{Name: "external1"},
+						Columns: []*catalog.Column{
+							{
+								Name: "bar",
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 2, StartColumn: 27,
+								},
+							},
+						},
+						Constraints: &catalog.TableConstraints{
+							ForeignKeys: []*catalog.ForeginKeyConstraint{
+								{
+									Rel:        &ast.TableName{Name: "foo"},
+									RelColumns: []string{"bar"},
+									Columns:    []string{"bar"},
+								},
+							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 2, StartColumn: 3,
+						},
+					},
+					{
+						Rel: &ast.TableName{Name: "external2"},
+						Columns: []*catalog.Column{
+							{
+								Name: "baz",
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 3, StartColumn: 27,
+								},
+							},
+						},
+						Constraints: &catalog.TableConstraints{
+							ForeignKeys: []*catalog.ForeginKeyConstraint{
+								{
+									Rel:        &ast.TableName{Name: "foo"},
+									RelColumns: []string{"bar"},
+									Columns:    []string{"baz"},
+								},
+							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 3, StartColumn: 3,
+						},
+					},
+					{
+						Rel: &ast.TableName{Name: "external3"},
+						Columns: []*catalog.Column{
+							{
+								Name: "qux",
+								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
+								SourceLocation: &catalog.SourceLocation{
+									Filename: "test", StartLine: 5, StartColumn: 4,
+								},
+							},
+						},
+						Constraints: &catalog.TableConstraints{
+							ForeignKeys: []*catalog.ForeginKeyConstraint{
+								{
+									Rel:        &ast.TableName{Name: "foo"},
+									RelColumns: []string{"bar"},
+									Columns:    []string{"qux"},
+								},
+							},
+						},
+						SourceLocation: &catalog.SourceLocation{
+							Filename: "test", StartLine: 4, StartColumn: 3,
+						},
+					},
+				},
+			},
+		},
+		{
+			`
 			-- public schema
 			CREATE SCHEMA IF NOT EXISTS public;
 			`,
@@ -56,6 +160,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
@@ -79,6 +184,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 0, StartColumn: 0,
 						},
@@ -94,6 +200,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 0,
 						},
@@ -119,6 +226,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 							TrailingComments: ` foo's comment`,
@@ -146,6 +254,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 2, StartColumn: 3,
 							LeadingComments:  ` foo's leading comment`,
@@ -179,6 +288,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 6, StartColumn: 3,
 							LeadingDetachedComments: []string{" foo's leading detached comment\n comment2"},
@@ -207,6 +317,7 @@ func TestUpdate(t *testing.T) {
 									Filename: "test", StartLine: 1, StartColumn: 21},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
@@ -238,6 +349,7 @@ func TestUpdate(t *testing.T) {
 								SourceLocation: nil,
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
@@ -264,6 +376,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
@@ -290,6 +403,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
@@ -330,6 +444,7 @@ func TestUpdate(t *testing.T) {
 								SourceLocation: nil,
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
@@ -408,6 +523,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
@@ -447,6 +563,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 							TrailingComments: " foo's comment",
@@ -493,6 +610,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
@@ -561,6 +679,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
@@ -600,6 +719,7 @@ func TestUpdate(t *testing.T) {
 								SourceLocation: nil,
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
@@ -776,6 +896,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
@@ -815,6 +936,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 						},
@@ -865,6 +987,7 @@ func TestUpdate(t *testing.T) {
 								},
 							},
 						},
+						Constraints: &catalog.TableConstraints{},
 						SourceLocation: &catalog.SourceLocation{
 							Filename: "test", StartLine: 1, StartColumn: 3,
 						},

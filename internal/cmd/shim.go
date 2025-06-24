@@ -157,6 +157,7 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 				Columns:        columns,
 				Comment:        t.Comment,
 				Indexes:        indexes,
+				Constraints:    pluginTableConstraints(t.Constraints),
 				SourceLocation: pluginSourceLocation(t.SourceLocation),
 			})
 		}
@@ -174,6 +175,28 @@ func pluginCatalog(c *catalog.Catalog) *plugin.Catalog {
 		DefaultSchema: c.DefaultSchema,
 		Comment:       c.Comment,
 		Schemas:       schemas,
+	}
+}
+
+func pluginTableConstraints(constraints *catalog.TableConstraints) *plugin.TableConstraints {
+	if constraints == nil {
+		return nil
+	}
+
+	var fks []*plugin.ForeginKeyConstraint
+	for _, c := range constraints.ForeignKeys {
+		fks = append(fks, &plugin.ForeginKeyConstraint{
+			Rel: &plugin.Identifier{
+				Catalog: c.Rel.Catalog,
+				Schema:  c.Rel.Schema,
+				Name:    c.Rel.Name,
+			},
+			RelColumnNames: c.RelColumns,
+			ColumnNames:    c.Columns,
+		})
+	}
+	return &plugin.TableConstraints{
+		ForeignKeys: fks,
 	}
 }
 

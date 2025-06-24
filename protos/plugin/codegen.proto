@@ -82,6 +82,7 @@ message Table {
   repeated Column columns = 2;
   string comment = 3;
   repeated Index indexes = 4;
+  TableConstraints constraints = 6;
   SourceLocation source_location = 5;
 }
 
@@ -148,6 +149,16 @@ message Column {
 
   SourceLocation source_location = 18;
   repeated string type_mods = 19;
+}
+
+message TableConstraints {
+  repeated ForeginKeyConstraint foreign_keys = 1;
+}
+
+message ForeginKeyConstraint {
+  Identifier rel = 1;
+  repeated string rel_column_names = 2;
+  repeated string column_names = 3;
 }
 
 message SourceLocation {
