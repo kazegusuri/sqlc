@@ -526,17 +526,9 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 								reftable = nodeConstraint.Constraint.Pktable.Relname
 							}
 
-							var refcolumns []string
-							attrs := nodeConstraint.Constraint.PkAttrs
-							if len(attrs) == 0 {
-								refcolumns = []string{item.ColumnDef.Colname}
-							} else {
-								refcolumns = stringSliceFromNodes(attrs)
-							}
-
 							constraint.ForeignKey = true
 							constraint.RefTable = reftable
-							constraint.RefColumns = refcolumns
+							constraint.RefColumns = stringSliceFromNodes(nodeConstraint.Constraint.PkAttrs)
 						}
 						constraints = append(constraints, constraint)
 					}

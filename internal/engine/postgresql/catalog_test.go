@@ -27,7 +27,7 @@ func TestUpdate(t *testing.T) {
 	}{
 		{
 			`
-			CREATE TABLE foo (bar text);
+			CREATE TABLE foo (bar text PRIMARY KEY);
 			CREATE TABLE external1 (bar text REFERENCES foo);
 			CREATE TABLE external2 (baz text REFERENCES foo (bar));
 			CREATE TABLE external3 (
@@ -42,11 +42,20 @@ func TestUpdate(t *testing.T) {
 						Rel: &ast.TableName{Name: "foo"},
 						Columns: []*catalog.Column{
 							{
-								Name: "bar",
-								Type: ast.TypeName{Name: "text", Typmods: &ast.List{}},
+								Name:      "bar",
+								IsNotNull: true,
+								Type:      ast.TypeName{Name: "text", Typmods: &ast.List{}},
 								SourceLocation: &catalog.SourceLocation{
 									Filename: "test", StartLine: 1, StartColumn: 21,
 								},
+							},
+						},
+						Indexes: []*catalog.Index{
+							{
+								Elems: []*catalog.IndexElem{
+									{Name: "bar", Ordering: 1, NullsOrdering: 1},
+								},
+								IsPrimary: true,
 							},
 						},
 						Constraints: &catalog.TableConstraints{},
@@ -69,7 +78,7 @@ func TestUpdate(t *testing.T) {
 							ForeignKeys: []*catalog.ForeginKeyConstraint{
 								{
 									Rel:        &ast.TableName{Name: "foo"},
-									RelColumns: []string{"bar"},
+									RelColumns: nil,
 									Columns:    []string{"bar"},
 								},
 							},
