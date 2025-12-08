@@ -13,7 +13,7 @@ import (
 
 // Parser is an interface for SQL parsers that can parse SQL into AST statements.
 type Parser interface {
-	Parse(r io.Reader) ([]ast.Statement, error)
+	Parse(r io.Reader, filename string) ([]ast.Statement, error)
 }
 
 // ColumnGetter retrieves column names for a query by preparing it against a database.
@@ -42,7 +42,7 @@ func New(colGetter ColumnGetter, parser Parser, dialect format.Dialect) *Expande
 // expands it to use explicit column names. Returns the expanded query string.
 func (e *Expander) Expand(ctx context.Context, query string) (string, error) {
 	// Parse the query
-	stmts, err := e.parser.Parse(strings.NewReader(query))
+	stmts, err := e.parser.Parse(strings.NewReader(query), "")
 	if err != nil {
 		return "", fmt.Errorf("failed to parse query: %w", err)
 	}

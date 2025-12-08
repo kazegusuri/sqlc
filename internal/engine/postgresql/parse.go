@@ -11,6 +11,7 @@ import (
 	"github.com/sqlc-dev/sqlc/internal/engine/postgresql/parser"
 	"github.com/sqlc-dev/sqlc/internal/source"
 	"github.com/sqlc-dev/sqlc/internal/sql/ast"
+	"github.com/sqlc-dev/sqlc/internal/sql/format"
 	"github.com/sqlc-dev/sqlc/internal/sql/sqlerr"
 )
 
@@ -171,7 +172,7 @@ func (p *Parser) Parse(r io.Reader, filename string) ([]ast.Statement, error) {
 
 	var stmts []ast.Statement
 	for _, raw := range tree.Stmts {
-		n, err := translate(raw, dispatcher)
+		n, err := translate(raw, dispatcher, p)
 		if err == errSkip {
 			continue
 		}
@@ -218,7 +219,7 @@ func (p *Parser) CommentSyntax() source.CommentSyntax {
 	}
 }
 
-func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, error) {
+func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher, dialect format.Dialect) (ast.Node, error) {
 	node := raw.Stmt
 	switch inner := node.Node.(type) {
 
@@ -506,7 +507,7 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 
 						var rawExprStr string
 						if nodeConstraint.Constraint.RawExpr != nil {
-							rawExprStr = ast.Format(convertNode(nodeConstraint.Constraint.RawExpr))
+							rawExprStr = ast.Format(convertNode(nodeConstraint.Constraint.RawExpr), dialect)
 						}
 
 						switch nodeConstraint.Constraint.Contype {

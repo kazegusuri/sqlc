@@ -20,7 +20,7 @@ import (
 
 // sqlParser is an interface for SQL parsers
 type sqlParser interface {
-	Parse(r io.Reader) ([]ast.Statement, error)
+	Parse(r io.Reader, filename string) ([]ast.Statement, error)
 }
 
 // sqlFormatter is an interface for formatters
@@ -71,7 +71,7 @@ func TestFormat(t *testing.T) {
 				// and return the formatted string. This tests that our formatting produces
 				// valid SQL that parses to the same AST structure.
 				fingerprint = func(sql string) (string, error) {
-					stmts, err := mysqlParser.Parse(strings.NewReader(sql))
+					stmts, err := mysqlParser.Parse(strings.NewReader(sql), "")
 					if err != nil {
 						return "", err
 					}
@@ -87,7 +87,7 @@ func TestFormat(t *testing.T) {
 				// For SQLite, we use the same "round-trip" fingerprint strategy as MySQL:
 				// parse the SQL, format it, and return the formatted string.
 				fingerprint = func(sql string) (string, error) {
-					stmts, err := sqliteParser.Parse(strings.NewReader(sql))
+					stmts, err := sqliteParser.Parse(strings.NewReader(sql), "")
 					if err != nil {
 						return "", err
 					}
@@ -138,7 +138,7 @@ func TestFormat(t *testing.T) {
 				}
 
 				// Parse the entire file to get proper statement boundaries
-				stmts, err := parse.Parse(bytes.NewReader(contents))
+				stmts, err := parse.Parse(bytes.NewReader(contents), "")
 				if err != nil {
 					// Skip files with parse errors (e.g., syntax_errors test cases)
 					return
