@@ -618,6 +618,7 @@ func translate(raw *nodes.RawStmt, dispatcher *CommentsDispatcher) (ast.Node, er
 			ReturnType: rt,
 			Replace:    n.Replace,
 			Params:     &ast.List{},
+			Options:    convertSlice(n.Options),
 		}
 		for _, item := range n.Parameters {
 			arg := item.Node.(*nodes.Node_FunctionParameter).FunctionParameter
