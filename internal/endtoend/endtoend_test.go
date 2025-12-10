@@ -6,6 +6,7 @@ import (
 	"os"
 	osexec "os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"slices"
 	"strings"
@@ -31,6 +32,30 @@ func stderrTransformer() cmp.Option {
 	return cmp.Transformer("Stderr", func(in string) string {
 		s := strings.Replace(in, "\r", "", -1)
 		return strings.Replace(s, "\\", "/", -1)
+	})
+}
+
+// normalizeJSONPaths normalizes absolute file paths in JSON content to make tests
+// environment-independent. It replaces paths like "/home/user/.../sqlc/internal/..."
+// with "/sqlc/internal/..." by finding the "sqlc" directory in the path.
+func normalizeJSONPaths(content string) string {
+	// Match JSON string values containing absolute paths with "sqlc" in them
+	// Pattern: "filename": "/path/to/sqlc/..."
+	re := regexp.MustCompile(`"filename":\s*"([^"]*?/sqlc/[^"]*)"`)
+	return re.ReplaceAllStringFunc(content, func(match string) string {
+		// Extract the path and normalize it
+		submatch := re.FindStringSubmatch(match)
+		if len(submatch) < 2 {
+			return match
+		}
+		fullPath := submatch[1]
+		// Find "sqlc" in the path and keep everything from there
+		idx := strings.Index(fullPath, "/sqlc/")
+		if idx == -1 {
+			return match
+		}
+		normalizedPath := fullPath[idx:]
+		return `"filename": "` + normalizedPath + `"`
 	})
 }
 
@@ -301,6 +326,13 @@ func cmpDirectory(t *testing.T, dir string, actual map[string]string) {
 	}
 	if err := filepath.Walk(dir, ff); err != nil {
 		t.Fatal(err)
+	}
+
+	// Normalize JSON file paths in actual output to make tests environment-independent
+	for name, content := range actual {
+		if strings.HasSuffix(name, ".json") {
+			actual[name] = normalizeJSONPaths(content)
+		}
 	}
 
 	opts := []cmp.Option{

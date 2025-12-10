@@ -84,6 +84,7 @@ message Table {
   repeated Index indexes = 4;
   TableConstraints constraints = 6;
   SourceLocation source_location = 5;
+  repeated Column excluded_columns = 7;
 }
 
 message Index {
@@ -182,6 +183,7 @@ message Query {
   repeated string comments = 6 [json_name = "comments"];
   string filename = 7 [json_name = "filename"];
   Identifier insert_into_table = 8 [json_name = "insert_into_table"];
+  repeated Column excluded_columns = 9 [json_name = "excluded_columns"];
 }
 
 message Parameter {
